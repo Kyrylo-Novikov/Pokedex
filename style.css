@@ -1,0 +1,47 @@
+body{
+    background-color: rgb(0, 183, 255);
+    height: 100vh;
+}
+
+
+.card{
+    height: 360px ;
+    width: 264px;
+    border: 1px solid black;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.pokemonname {
+    height: 60px;
+    background-color: black;
+    color: white;
+    border-radius: 10px 10px 0 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+}
+
+#content{
+    display: flex;
+    flex-wrap: wrap;
+    gap:32px;
+    margin: 24px;
+    justify-content: center;
+    align-items: center;
+}
+
+img{
+    
+    height: 180px;
+    object-fit: cover;
+    /* padding: 20px 52px; */
+}
+
+.info-overview{
+    height:118px ;
+    background-color: black;
+    border-radius: 0 0 12px 12px;
+}
