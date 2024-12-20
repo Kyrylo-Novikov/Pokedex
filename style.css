@@ -1,27 +1,34 @@
 body{
     background-color: rgb(0, 183, 255);
-    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 
 .card{
-    height: 360px ;
-    width: 264px;
-    border: 1px solid black;
-    border-radius: 12px;
+    width: 320px;
+    border: 18px outset gray;
+    border-radius: 18px;
     text-align: center;
+    cursor: pointer;
+}
+
+.card:hover .pokemon-img{
+    scale:1.5;
+    transform: translate(00px, -28px);
+    transition-duration: 1.3s;
 }
 
 .pokemonname {
     height: 60px;
     background-color: black;
     color: white;
-    border-radius: 10px 10px 0 0;
     text-align: center;
     display: flex;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
     font-size: 24px;
+    width: 100%;
 }
 
 #content{
@@ -34,21 +41,157 @@ body{
 }
 
 .pokemon-img{
-    
     height: 180px;
-    object-fit: cover;
-    /* padding: 20px 52px; */
+    object-fit: contai;
 }
 
+
+
 .info-overview{
-    height:118px ;
+    height:56px ;
     background-color: black;
-    border-radius: 0 0 12px 12px;
     color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .type-img{
-    /* height: 24px;
-    width: 40px; */
-    margin-top: 8px 
+    width: 48%;
+    margin: 0 2px;
+    object-fit: contain;
+}
+
+.poke-numb{
+    font-size: 36px;
+    width: 15%;
+    padding-left: 8px;
+}
+
+.spelled-pokename{
+    width: 80%;
+}
+
+.lightbox{
+    background-color: rgba(0, 0, 0, 0.815);
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-big-view{
+    height: 800px;
+    width: 600px;
+    border-radius: 16px;
+    font-size: 36px;
+    margin:16px;
+    border: 16px solid gray;
+    font-weight: bold;
+}
+
+.close-btn{
+    cursor: pointer;
+}
+
+
+.attribute-style{
+    font-weight: bold;
+    font-size: 20px;
+    width: 80px;
+}
+
+.top-card{
+    justify-content: space-evenly;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+
+.mid-card{
+    height: 300px;
+    justify-content: space-around;
+}
+
+.card-imgs > div > img{
+    max-height: 280px;
+    max-width: 280px;
+    min-height: 200px;
+    min-width: 200px;
+    border: 3px solid gray; 
+    box-shadow: 0 0 0 6px black; 
+    padding: 12px;
+}
+
+.low-card{
+    background-color: white;
+    height:340px ;
+    width: 95%;
+    border-radius: 8px;
+    margin: 12px auto ;
+    border: 12px outset black;
+    flex-direction: column;
+}
+
+.tab-container{
+    height: 48px;
+    text-align: center;
+    align-items: center; 
+    width: 100%;
+    background-color: gold;
+    border-bottom: 1px solid black;
+ } 
+
+label{
+    cursor: pointer;
+}
+.tab-container > label{
+   
+    width: 33%;
+}
+
+[id^="abilities-label-"] {
+    border-left: 1px solid black ;
+    border-right: 1px solid black ;
+}
+
+/* [id^="bg-"][id$="-img"]{
+    
+} */
+.stats-name{
+    font-size: 20px;
+    width: 100px;
+}
+[id^="stats-"]{
+    flex-direction: column;
+    justify-content: space-between;
+}
+[id^="bg-scale-hp"] 
+{
+    background-color: green;
+}
+[id^="bg-scale-attack"] 
+{
+    background-color: red;
+}
+[id^="bg-scale-defense"] 
+{
+    background-color: blue;
+}
+[id^="bg-scale-special-attack"] 
+{
+    background-color: orange;
+}
+[id^="bg-scale-special-defense"] 
+{
+    background-color: indigo;
+}
+[id^="bg-scale-speed"] 
+{
+    background-color: violet;
+}
+
+.stat-bar{
+    justify-content: center;
 }

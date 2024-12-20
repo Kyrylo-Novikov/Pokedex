@@ -3,3 +3,22 @@
     scroll-behavior: smooth;
     box-sizing: border-box;
 }
+
+button{
+    height: 80px;
+    width: 160px;
+    border-radius: 16px;
+}
+
+.d-none{
+    display: none;
+}
+
+.d-flex{
+    display: flex;
+}
+
+.center{
+    align-items: center;
+    justify-content: center;
+}
