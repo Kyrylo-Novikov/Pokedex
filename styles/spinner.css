@@ -1,0 +1,60 @@
+@keyframes rolling{
+    0%{
+        transform:translateX(-100vw) rotate(0deg)
+    }
+    100%{
+        transform:translateX(10vw) rotate(360deg)
+    }
+  
+}
+
+@keyframes flash{
+    0%{
+        clip-path: inset(0 100% 0 0);
+    }
+    100%{
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+#loading-spinner-img{
+    animation:rolling 5s linear infinite forwards; 
+    position: relative;
+    border-radius: 50%;
+    height: 200px;
+    top: 200px;
+}
+
+
+#loading-spinner{
+    /* display: flex; */
+    position: absolute;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+    background-image:url(../assets/img/pokedexhintergrund_2.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    overflow-x: hidden;
+}
+
+#loading-spinner-text{
+    font-size: 38px;
+    font-weight: 900;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    animation: flash 1.5s linear  infinite forwards ;
+}
+
+
+/* #evo-loading-spinner{
+    font-size: 38px;
+    font-weight: 900;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    animation: flash 1.5s linear  infinite forwards ;
+} */
