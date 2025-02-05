@@ -18,9 +18,9 @@ let currentChain = []
 let lastUsedIndex = 0
 
 async function Init() {
-    // loadingSpinner(true)
+    loadingSpinner(true)
     await loadData()
-    // loadingSpinner(false)
+    loadingSpinner(false)
 }
 
 function loadingSpinner(isLoading) {
