@@ -6,7 +6,7 @@ async function openLightbox(id, idNumb, pokeImgUrl, pokeGifUrl,) {
     displaySkills(id)
     pokeTypeOnBigViewCard(id)
     displayBottomCardInfosTabs(`stats-${id}`)
-    fetchEvoChain(id)
+    checkChais(id)
     toggleLightbox()
 }
 
@@ -26,8 +26,6 @@ function fetchedPokemonLoop(id) {
 
 function displayStatsBotCard(id) {
     let oneFetchPokemon = fetchedPokemonLoop(id)
-
-
     let bottomCardRef = document.getElementById(`bottom-card-${oneFetchPokemon.id}`)
     bottomCardRef.innerHTML = bottomCardTemplate(id);
     let stats = oneFetchPokemon.stats
@@ -48,7 +46,6 @@ async function displaySkills(id) {
         let abilityName = abilityInfos.ability.name.replace("-", " ")
         let abilityNameWords = abilityName.split(" ")
         let capitAbilityNameWord = abilityNameWords.map(word => word[0].toUpperCase(0) + word.slice(1)).join().replace(",", " ");
-
         abilityRef.innerHTML += abilityTemplate(capitAbilityNameWord, id, indexAbility)
     }
 }
@@ -72,7 +69,7 @@ function toggleLightbox() {
     dialog.classList.toggle("d-flex")
     if (dialog.classList.contains("d-flex")) {
         document.body.style.overflow = "hidden"
-    } else{
+    } else {
         document.body.style.overflow = ""
     }
 }
@@ -80,8 +77,7 @@ function toggleLightbox() {
 function displayBottomCardInfosTabs(defaultOpen) {
     let openCardBottom = document.getElementById(defaultOpen)
     if (!openCardBottom) {
-        console.error(`Element mit ID ${openCardBottom} nicht gefunden.`);
-        return; // Bricht die Funktion ab, wenn das Element nicht existiert
+        return;
     }
     let tabsToClose = document.querySelectorAll(".content")
     tabsToClose.forEach(tab => { tab.style.display = "none" });
@@ -95,50 +91,39 @@ function displayBottomCardInfosTabs(defaultOpen) {
 function statBar() {
     document.querySelectorAll(".stat-bar").forEach(bar => {
         let htmlRef = document.documentElement
-        let htmlWidth = getComputedStyle(htmlRef).width 
+        let htmlWidth = getComputedStyle(htmlRef).width
         let htmlWidthNmb = parseInt(htmlWidth)
         let barValue = bar.dataset.value
         bar.style.width = `${barValue * 1.7}px`
-        if(htmlWidthNmb <= "710"){
-            bar.style.width = `${barValue * 1.2}px`
-            if (htmlWidthNmb <= "550") {
-                bar.style.width = `${barValue * 1}px`
-                if (htmlWidthNmb <= "475") {
-                    bar.style.width = `${barValue * 0.8}px`
-                    if (htmlWidthNmb <= "400") {
-                        bar.style.width = `${barValue * 0.65}px`
-                    }
+        statBarSizing(htmlWidthNmb, barValue, bar)
+    });
+}
+
+function statBarSizing(htmlWidthNmb, barValue, bar) {
+    if (htmlWidthNmb <= "710") {
+        bar.style.width = `${barValue * 1.2}px`
+        if (htmlWidthNmb <= "550") {
+            bar.style.width = `${barValue * 1}px`
+            if (htmlWidthNmb <= "475") {
+                bar.style.width = `${barValue * 0.8}px`
+                if (htmlWidthNmb <= "400") {
+                    bar.style.width = `${barValue * 0.65}px`
                 }
             }
         }
-        
-    });
+    }
 }
+
 window.addEventListener("resize", statBar);
 
 async function displayAbilityDescription(id, indexAbility) {
     document.getElementById('ability-description').innerHTML = '';
     let oneFetchPokemon = fetchedPokemon.find(pokemon => pokemon.species.name === id);
-    if (!oneFetchPokemon) {
-        console.error("Pokémon nicht gefunden.");
-        return;
-    }
     let abilitieArray = oneFetchPokemon.abilities;
-
-    if (!abilitieArray || !abilitieArray[indexAbility] || !abilitieArray[indexAbility].ability.url) {
-        console.error("Fähigkeitsdaten nicht verfügbar.");
-        document.getElementById('ability-description').innerHTML = "Keine Beschreibung verfügbar.";
-        return;
-    }
-
     try {
         let abilityDescriptionRespons = await fetch(abilitieArray[indexAbility].ability.url);
-        if (!abilityDescriptionRespons.ok) {
-            throw new Error(`HTTP error! status: ${abilityDescriptionRespons.status}`);
-        }
         let abilityDescriptionResponsToJson = await abilityDescriptionRespons.json();
         let abilityDescriptionToDisplay = abilityDescriptionResponsToJson.effect_entries.length > 0 ? abilityDescriptionResponsToJson.effect_entries[1].short_effect : "Keine Beschreibung verfügbar.";
-
         document.getElementById('ability-description').innerHTML = abilityDescriptionToDisplay;
     } catch (error) {
         console.error("Fehler beim Abrufen der Fähigkeitsbeschreibung:", error);
@@ -146,113 +131,138 @@ async function displayAbilityDescription(id, indexAbility) {
     }
 }
 
-async function fetchEvoChain(PokemonName) {
+async function checkChais(PokemonName) {
     let totalChains = 541;
-
     for (let iEvoChain = 1; iEvoChain <= totalChains; iEvoChain++) {
         if (failEvoChains.includes(iEvoChain)) {
             continue
         }
-        try {
-            let responsEvoChainInfos = await fetch(BASE_URL + `evolution-chain/${iEvoChain}`)
-            if (!responsEvoChainInfos.ok) {
-                failEvoChains.push(iEvoChain)
-                throw new Error(`Fehler bei Chain ${iEvoChain}`)
-            }
-            let responsEvoChainToJson = await responsEvoChainInfos.json()
-            await evoChainCheck(responsEvoChainToJson, PokemonName,)
-        } catch (error) {
-            console.error(`Chain ${iEvoChain} konnte nicht gefunden werden`, error);
-        }
+        await fetchEvoChain(iEvoChain, failEvoChains, PokemonName)
     }
 }
+
+async function fetchEvoChain(iEvoChain, failEvoChains, PokemonName) {
+    try {
+        let responsEvoChainInfos = await fetch(BASE_URL + `evolution-chain/${iEvoChain}`)
+        if (!responsEvoChainInfos.ok) {
+            failEvoChains.push(iEvoChain)
+            throw new Error(`Fehler bei Chain ${iEvoChain}`)
+        }
+        let responsEvoChainToJson = await responsEvoChainInfos.json()
+        await evoChainCheck(responsEvoChainToJson, PokemonName,)
+    } catch (error) {
+        console.error(`Chain ${iEvoChain} konnte nicht gefunden werden`, error);
+    }
+}
+
 function evoChainCheck(responsEvoChainToJson, PokemonName) {
-    let currentChain = responsEvoChainToJson.chain
     if (responsEvoChainToJson.chain.species?.name === PokemonName) {
-        wholeChain(currentChain, responsEvoChainToJson, PokemonName)
-        return true;
-    } else if (responsEvoChainToJson.chain.evolves_to?.[0]?.species?.name === PokemonName) {
-        wholeChain(currentChain, responsEvoChainToJson, PokemonName)
-        return true;
-    } else if (responsEvoChainToJson.chain.evolves_to?.[0]?.evolves_to?.[0]?.species?.name === PokemonName) {
-        wholeChain(currentChain, responsEvoChainToJson, PokemonName)
-        return true;
+        return wholeChain(responsEvoChainToJson.chain, responsEvoChainToJson, PokemonName);
+    }
+    for (let secEvo of responsEvoChainToJson.chain.evolves_to) {
+        checkSecEvo(secEvo, responsEvoChainToJson, PokemonName)
+        checkThirdEvo(secEvo, responsEvoChainToJson, PokemonName)
     }
     return false;
 }
 
+function checkSecEvo(secEvo, responsEvoChainToJson, PokemonName) {
+    if (secEvo.species?.name === PokemonName) {
+        return wholeChain(responsEvoChainToJson.chain, responsEvoChainToJson, PokemonName);
+    }
+}
 
-
+function checkThirdEvo(secEvo, responsEvoChainToJson, PokemonName) {
+    for (let thirdEvo of secEvo.evolves_to) {
+        if (thirdEvo.species?.name === PokemonName) {
+            return wholeChain(responsEvoChainToJson.chain, responsEvoChainToJson, PokemonName);
+        }
+    }
+}
 
 function wholeChain(currentChain, responsEvoChainToJson, PokemonName) {
     let evoNumbers = [currentChain.species.url.replace(/\D+/g, '').slice(1)]
     let evoNames = [responsEvoChainToJson.chain.species.name]
-    console.log(responsEvoChainToJson.id);
-    let collectEvoChainForTemlate = ""
-        if (responsEvoChainToJson.chain.evolves_to[0]?.species?.name) {
-        let secEvoName = responsEvoChainToJson.chain.evolves_to[0]?.species?.name
-        let secEvoNmb = responsEvoChainToJson.chain.evolves_to[0].species.url.replace(/\D+/g, '').slice(1);
-        evoNumbers.push(secEvoNmb)
-        evoNames.push(secEvoName)
+    secPokEvoColl(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames)
+    thirdPokEvoColl(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames)
+    collectEvoTemp(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames)
+};
+
+function secPokEvoColl(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames) {
+    if (responsEvoChainToJson.chain.evolves_to.length > 0) {
+        responsEvoChainToJson.chain.evolves_to.forEach(secEvo => {
+            let secEvoName = secEvo.species.name
+            let secEvoNmb = secEvo.species.url.replace(/\D+/g, '').slice(1);
+            evoNumbers.push(secEvoNmb)
+            evoNames.push(secEvoName)
+        });
     }
+}
+
+function thirdPokEvoColl(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames) {
     if (responsEvoChainToJson.chain.evolves_to[0]?.evolves_to[0]?.species?.name) {
         let thirdEvoName = responsEvoChainToJson.chain.evolves_to[0].evolves_to[0]?.species?.name
         let thirdEvoNmb = responsEvoChainToJson.chain.evolves_to[0].evolves_to[0].species.url.replace(/\D+/g, '').slice(1);
         evoNumbers.push(thirdEvoNmb)
         evoNames.push(thirdEvoName)
     }
-    evoNumbers.forEach((evoNmb, index) => {
-        let pokeImgUrl = evoUrls(evoNmb)
-        evoChainForTemlate = EvoChainTemplate(responsEvoChainToJson.id , evoNames[index], pokeImgUrl)
-        collectEvoChainForTemlate += evoChainForTemlate
-    });
-    
-    let evoChainString = `evolution-${PokemonName}`
-    waitForElement(evoChainString, (evoChain) => {
-    evoChain.innerHTML = collectEvoChainForTemlate})
 }
 
-function evoUrls(evoNmb){
+function collectEvoTemp(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames) {
+    let collectEvoChainForTemlate = ""
+    evoNumbers.forEach((evoNmb, index) => {
+        let pokeImgUrl = evoUrls(evoNmb)
+        evoChainForTemlate = EvoChainTemplate(responsEvoChainToJson.id, evoNames[index], pokeImgUrl)
+        collectEvoChainForTemlate += evoChainForTemlate
+    })
+    let evoChainString = `evolution-${PokemonName}`
+    waitForElement(evoChainString, (evoChain) => {
+        evoChain.innerHTML = collectEvoChainForTemlate
+    })
+}
+
+function evoUrls(evoNmb) {
     let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${evoNmb}.png`;
     return pokeImgUrl
 }
 
-async function changePokemon(direction) {
+function changePokemon(direction) {
     let currentId = parseInt(dialog.dataset.currentPokemonId)
-    let newId = currentId + direction;
+    let newId = Math.min(Math.max(currentId + direction, 1), 1025)
     dialog.dataset.currentPokemonId = newId;
-    if (newId < 1) {
-        newId = 1
-    } else if (newId > 1025) {
-        newId = 1025
-    } else {
+    changeInsideDialog(newId)
+}
 
-    }
+async function changeInsideDialog(newId) {
     try {
         let pokemonInfosToJson = await fetchOnePokemon(newId);
         if (pokemonInfosToJson) {
-            let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${pokemonInfosToJson.id}.gif`;
-            let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${pokemonInfosToJson.id}.png`;
-            let pokeImgUrlFallback = `${BASE_IMG_URL}${pathFallbackImg}${pokemonInfosToJson.id}.png`;
-            let { pokeImgUrl: finalImgUrl, pokeGifUrl: finalGifUrl } = await imgUrlTest(pokeImgUrl, pokeGifUrl, pokeImgUrlFallback);
-            let alreadyFetched = fetchedPokemon.some(Pokemon => Pokemon.id === pokemonInfosToJson.id)
-            if (!alreadyFetched) {
-                fetchedPokemon.push(pokemonInfosToJson)
-            }
-            dialog.innerHTML =  dialogTemplate(finalImgUrl, finalGifUrl, pokemonInfosToJson.species.name, newId)
-            await pokemonBgColorCheckAndDisplay(newId);
-             displayPokeImg(pokemonInfosToJson)
-             pokeTypeOnBigViewCard(pokemonInfosToJson.species.name);
-             displayTypesforPokemon(pokemonInfosToJson)
-             displayStatsBotCard(`${pokemonInfosToJson.species.name}`);
-             displayBottomCardInfosTabs(`stats-${pokemonInfosToJson.species.name}`);
-             displaySkills(pokemonInfosToJson.species.name)
-             fetchEvoChain(pokemonInfosToJson.species.name)
-
+            await updateDialog(pokemonInfosToJson, newId)
         } else {
             console.error("Pokemon mit dieser ID nicht gefunden.");
         }
     } catch (error) {
         console.error("Fehler beim Laden des nächsten/vorherigen Pokémon:", error);
     }
+}
+
+function urlToChange(pokemonInfosToJson, newId) {
+    let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${pokemonInfosToJson.id}.gif`;
+    let alreadyFetched = fetchedPokemon.some(Pokemon => Pokemon.id === pokemonInfosToJson.id)
+    if (!alreadyFetched) {
+        fetchedPokemon.push(pokemonInfosToJson)
+    }
+    dialog.innerHTML = dialogTemplate(pokeGifUrl, pokeGifUrl, pokemonInfosToJson.species.name, newId)
+}
+
+async function updateDialog(pokemonInfosToJson, newId) {
+    urlToChange(pokemonInfosToJson, newId)
+    await pokemonBgColorCheckAndDisplay(newId);
+    displayPokeImg(pokemonInfosToJson)
+    pokeTypeOnBigViewCard(pokemonInfosToJson.species.name);
+    displayTypesforPokemon(pokemonInfosToJson)
+    displayStatsBotCard(`${pokemonInfosToJson.species.name}`);
+    displayBottomCardInfosTabs(`stats-${pokemonInfosToJson.species.name}`);
+    displaySkills(pokemonInfosToJson.species.name)
+    checkChais(pokemonInfosToJson.species.name)
 }

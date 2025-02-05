@@ -15,25 +15,24 @@ let bgPath = "pokemon-color/"
 let failEvoChains = []
 let bgColorList = []
 let currentChain = []
-let lastUsedIndex = 0 
+let lastUsedIndex = 0
 
 async function Init() {
-    loadingSpinner(true)
+    // loadingSpinner(true)
     await loadData()
-    loadingSpinner(false)
+    // loadingSpinner(false)
 }
 
 function loadingSpinner(isLoading) {
     let spinnerRef = document.getElementById("loading-spinner")
-    if (isLoading ) {
-        spinnerRef.style.display ="flex"
-        contentRef.style.display ="none"
-    }else{
-        spinnerRef.style.display ="none"
-        contentRef.style.display ="flex"
+    if (isLoading) {
+        spinnerRef.style.display = "flex"
+        contentRef.style.display = "none"
+    } else {
+        spinnerRef.style.display = "none"
+        contentRef.style.display = "flex"
     }
 }
-
 
 async function fetchedPokemonOverview() {
     try {
@@ -49,36 +48,46 @@ async function fetchedPokemonOverview() {
 }
 
 async function searchForPokemon() {
-    
     let respons = await fetch(BASE_URL + "pokemon?limit=100000&offset=0")
     let responsToJson = await respons.json();
-    let responsToArrayResult = responsToJson.results
-    let searchResultRef =  document.getElementById("search-result")
-    let inputRef = document.getElementById("input-pokemon-name").value
+    let searchResponsToArrayResult = responsToJson.results
+    let searchResultRef = document.getElementById("search-result")
+    let inputRef = document.getElementById("input-pokemon-name")
     searchResultRef.innerHTML = ''
-    console.log(responsToArrayResult);
-    
-    if (inputRef.length <3) {
-        return
+    if (inputRef.value.length >= 3) {
+        workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef)
     }
-    
-    let searchingName =  responsToArrayResult.filter((nameToSearch) => nameToSearch.name.toLowerCase().startsWith(inputRef.toLowerCase()));
-    
-    searchingName.forEach(searchResult => { 
-        searchResultRef.innerHTML += templateSearchin(searchResult.name,searchResult.url.replace(/\D+/g, '').slice(1)) 
-        
-    });
-    
+    clearSearchingInput(inputRef, searchResultRef)
 }
 
-async function loadToSearchedPokemon(name,id) {
-    let searchtRef = document.getElementById(`foundet-${name}`)
-    let idRef = id
-    if (currentLoadLimit < id) {
+function workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef) {
+    let searchingName = searchResponsToArrayResult.filter((nameToSearch) => nameToSearch.name.toLowerCase().startsWith(inputRef.value.toLowerCase()));
+
+    searchingName.slice(0, 10).forEach(searchResult => {
+        if (searchResult.url.replace(/\D+/g, '').slice(1) <= 1025) {
+            searchResultRef.innerHTML += templateSearchin(searchResult.name, searchResult.url.replace(/\D+/g, '').slice(1))
+        }
+    });
+}
+
+function clearSearchingInput(inputRef, searchResultRef) {
+    inputRef.addEventListener("blur", function () {
+        setTimeout(() => {
+            this.value = "";
+            searchResultRef.innerHTML = "";
+        }, 100)
+    });
+}
+
+async function loadToSearchedPokemon(name, id) {
+    if (currentLoadLimit <= Number(id)) {
         currentLoadLimit = Number(id)
     }
+    loadingSpinner(true)
     await loadData()
+    loadingSpinner(false)
 }
+
 async function lodeMorePokemon() {
     currentLoadLimit += 20
     loadingSpinner(true)
@@ -90,8 +99,6 @@ async function loadData() {
     let responsToArrayResult = await fetchedPokemonOverview()
     await pokemonOvInfos(responsToArrayResult)
 }
-
-
 
 async function pokemonOvInfos(responsToArrayResult) {
     pokemonBgColorFetch()
@@ -105,7 +112,7 @@ async function pokemonOvInfos(responsToArrayResult) {
         await displayPokeImg(pokemonInfosToJson)
         await displayTypesforPokemon(pokemonInfosToJson)
         await pokemonBgColorCheckAndDisplay()
-        lastUsedIndex = iPokeName+1
+        lastUsedIndex = iPokeName + 1
     }
 }
 
@@ -124,7 +131,6 @@ async function fetchOnePokemon(id) {
     }
 }
 
-
 async function displayTypesforPokemon(pokemonInfosToJson) {
     for (let type of pokemonInfosToJson.types) {
         await typeOnOv(type.type.name, pokemonInfosToJson)
@@ -139,36 +145,27 @@ async function displayPokeImg(pokemonInfosToJson) {
         return
     }
     let { pokeImgUrl: finalImgUrl, pokeGifUrl: finalGifUrl } = await imgUrlTest(pokeImgUrl, pokeGifUrl, pokeImgUrlFallback);
-
-
     contentRef.innerHTML += template(finalImgUrl, finalGifUrl, pokemonInfosToJson)
 }
 
 async function imgUrlTest(pokeImgUrl, pokeGifUrl, pokeImgUrlFallback) {
     try {
         let responsImg = await fetch(pokeImgUrl);
+        let responsGif = await fetch(pokeGifUrl);
         if (!responsImg.ok) {
-            console.warn(`Bild ${pokeImgUrl} nicht gefunden. Nutze den Fallback`)
             pokeImgUrl = pokeImgUrlFallback;
             responsImg = await fetch(pokeImgUrl)
-        } if (!responsImg.ok) {
-            console.error(`das bild gibt es auch nicht`)
         }
-        let responsGif = await fetch(pokeGifUrl);
         if (!responsGif.ok) {
-            console.warn(`Gif ${pokeGifUrl} gibt es nicht`)
             pokeGifUrl = pokeImgUrlFallback
         }
         return { pokeImgUrl, pokeGifUrl };
     }
     catch (error) {
-        console.error("Fehler beim laden der Bilder")
-        return ({ responsGif: null, responsImg: null })
+        return ({ pokeImgUrl: null, pokeGifUrl: null })
     }
 }
 
-
-// Liste alle vorhandenen Typen zum abgleich auf
 async function typeOnOv(typesOfTheDisplayedPokemon, pokemonInfosToJson) {
     try {
         let responsTypes = await fetch(BASE_URL + "type/");
@@ -187,38 +184,24 @@ async function pokeTypName(responsTypesToArray, typesOfTheDisplayedPokemon, poke
         if (typesOfTheDisplayedPokemon === singelTypesName) {
             await displayPokeTypImg(pokemonInfosToJson, singelTypesID)
         }
-
     }
 }
 
 async function displayPokeTypImg(pokemonInfosToJson, singelTypesID) {
     try {
-        let typImgsRef = await fetch(BASE_TYPE_IMG_URL + singelTypesID + `.png`)
-        let typImgUrl = await typImgsRef.url
-        let typeOnCardRef = await new Promise(resolve => {
-            let interval = setInterval(() => {
-                let typeArea = document.getElementById(`${pokemonInfosToJson.species.name}-type-area`);
-                if (typeArea) {
-                    clearInterval(interval);
-                    resolve(typeArea);
-                }
-            }, 0);
-        });
+        let typImgsRef = await fetch(BASE_TYPE_IMG_URL + singelTypesID + `.png`);
+        let typImgUrl = typImgsRef.url;
+        let typeOnCardRef = await new Promise(resolve => waitForElement(`${pokemonInfosToJson.species.name}-type-area`, resolve))
         if (typeOnCardRef) {
             let noDoubleTypeDisplay = typeOnCardRef.querySelectorAll(`.type-img[id*="-${singelTypesID}-type-img"]`)
             if (noDoubleTypeDisplay.length === 0) {
                 typeOnCardRef.innerHTML += typeTemplate(pokemonInfosToJson, typImgUrl, singelTypesID)
             }
-        } else {
-            console.error(`Element with ID "${pokemonInfosToJson.species.name}-type-area" not found.`);
-            return;
-        }
+        };
     } catch (error) {
         console.error("Fehler beim Laden des Typ:", error);
     }
 }
-
-
 
 async function pokemonBgColorFetch() {
     let responsBgColor = await fetch(BASE_URL + bgPath)
@@ -232,31 +215,43 @@ async function pokemonBgColorFetch() {
     return bgColorList
 }
 
-
 function pokemonBgColorCheckAndDisplay() {
     let bgColorListRef = bgColorList
     for (let i = 0; i < bgColorListRef.length; i++) {
         let bgColor = bgColorListRef[i];
         let bgColorName = bgColor.name
-
         for (let iBgPokemonList = 0; iBgPokemonList < bgColor.pokemon_species.length; iBgPokemonList++) {
             let bgOneColorPokemonList = bgColor.pokemon_species[iBgPokemonList];
+            pokemonBgColorDisplay(bgColorName, bgOneColorPokemonList)
+        }
+    }
+};
 
+function pokemonBgColorDisplay(bgColorName, bgOneColorPokemonList) {
+    fetchedPokemon.forEach(pokemon => {
+        if (pokemon.species.name === bgOneColorPokemonList.name) {
+            let pokemonBgColorOverviewRef = `bg-${pokemon.species.name}-img`;
+            let pokemonBgColorBigviewRef = `lightbox-content${pokemon.species.name}`
+            waitForColor(pokemonBgColorOverviewRef, pokemonBgColorBigviewRef, bgColorName)
+        }
+    })
+}
 
-
-            fetchedPokemon.forEach(pokemon => {
-                if (pokemon.species.name === bgOneColorPokemonList.name) {
-                    let pokemonBgColorOverviewRef = `bg-${pokemon.species.name}-img`;
-                    let pokemonBgColorBigviewRef = `lightbox-content${pokemon.species.name}`
-                    waitForElement(pokemonBgColorOverviewRef, (pokemonBgColorOverview) => {
-                        pokemonBgColorOverview.style.backgroundColor = bgColorName
-                    })
-                    waitForElement(pokemonBgColorBigviewRef, (pokemonBgColorBigview) => {
-                        pokemonBgColorBigview.style.backgroundColor = bgColorName
-                            if (bgColorName === "black") {
-                                pokemonBgColorBigview.style.color = "white"
-                            }
-                    })}})}}};
+function waitForColor(pokemonBgColorOverviewRef, pokemonBgColorBigviewRef, bgColorName) {
+    waitForElement(pokemonBgColorOverviewRef, (pokemonBgColorOverview) => {
+        pokemonBgColorOverview.style.backgroundColor = bgColorName
+    })
+    waitForElement(pokemonBgColorBigviewRef, (pokemonBgColorBigview) => {
+        pokemonBgColorBigview.style.backgroundColor = bgColorName
+        if (bgColorName === "black") {
+            pokemonBgColorBigview.style.color = "white"
+        }
+        if (bgColorName === "red" || bgColorName === "brown") {
+            let closeBtnRef = document.getElementById("close-btn")
+            closeBtnRef.style.color = "black"
+        }
+    })
+}
 
 function waitForElement(idString, callback) {
     let interval = setInterval(() => {
@@ -265,5 +260,5 @@ function waitForElement(idString, callback) {
             clearInterval(interval);
             callback(nameOfRef);
         }
-    }, 100); 
+    }, 20);
 }

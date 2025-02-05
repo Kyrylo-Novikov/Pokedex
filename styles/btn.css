@@ -1,0 +1,25 @@
+.btn{
+    cursor: pointer;
+}
+#load-more-btn {
+    display: grid;
+    justify-content: center;
+}
+
+#load-more-btn>button {
+    background-color: blue;
+    font-size: 30px;
+    font-weight: 900;
+    color: yellow;
+    border: 6px solid rgb(217, 255, 0);
+    margin: 12px;
+}
+
+#close-btn {
+    cursor: pointer;
+    color: red;
+}
+
+.change-pokemon-btn {
+    gap: 80px;
+}

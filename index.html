@@ -11,28 +11,31 @@
     <link rel="icon" type="image/png" href="/assets/img/pokeball_abklatsch.png">
     <link rel="stylesheet" href="./styles/spinner.css">
     <link rel="stylesheet" href="./assets/fonts/roboto.css">
+    <link rel="stylesheet" href="styles/att_selector.css">
+    <link rel="stylesheet" href="styles/btn.css">
 </head>
 
 <body onload="Init()">
     <header id="header" class="d-flex">
-        <img src="/assets/img/pokeball_abklatsch.png" alt="Pokeball IMG" class="IconPokeball">
+        <img src="/assets/img/pokeball_abklatsch.png" alt="Pokeball IMG" class="icon-pokeball">
         <form action="" class="d-flex center flex-colume">
-            <input type="text" placeholder="Search for a Pokemon" name="search" id="input-pokemon-name" oninput="searchForPokemon()">
+            <input type="text" placeholder="Search for a Pokemon" name="search" id="input-pokemon-name"
+                oninput="searchForPokemon()">
             <div id="search-result" class="center flex-colume d-flex"></div>
-          </form>
+        </form>
     </header>
     <div id="loading-spinner" class="d-none">
         <div id="loading-spinner-text">Daten werden geladen . . . </div>
         <img id="loading-spinner-img" src="\assets\img\pokeball_abklatsch.png" alt="">
     </div>
-    <section id="content" >
-        
+    <section id="content">
+
     </section>
     <div id="lightbox" onclick="toggleLightbox()" class="lightbox d-none">
-        
+
     </div>
-    <div id="search-btn">
-        <button id="" class="center" type="button" onclick="lodeMorePokemon()">Lode more</button>
+    <div id="load-more-btn">
+        <button id="" class="center btn" type="button" onclick="lodeMorePokemon()">Lode more</button>
     </div>
     <footer id="footer">
     </footer>
@@ -40,7 +43,7 @@
     <script src="script.js"></script>
     <script src="scripts/templets.js"></script>
 
-    
+
 </body>
 
 </html>

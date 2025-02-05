@@ -1,43 +1,42 @@
-*{
-    margin:0;
+* {
+    margin: 0;
     scroll-behavior: smooth;
     box-sizing: border-box;
     font-family: 'Roboto';
 }
 
-button{
+button {
     height: 120px;
     width: 200px;
     border-radius: 16px;
 }
 
-.d-none{
+.d-none {
     display: none;
 }
 
-.d-flex{
+.d-flex {
     display: flex;
 }
 
-
-.center{
+.center {
     align-items: center;
     justify-content: center;
     text-align: center;
 }
 
-.flex-colume{
+.flex-colume {
     flex-direction: column;
 }
 
-.flex-row{
+.flex-row {
     flex-direction: row;
 }
- .height-100{
+
+.height-100 {
     height: 100%;
-   
 }
 
-.width-100{
+.width-100 {
     width: 100%;
-} 
+}

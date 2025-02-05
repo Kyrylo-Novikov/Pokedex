@@ -1,17 +1,19 @@
-#header{
+#header {
     background-color: rgb(3, 11, 121);
     height: 120px;
     justify-content: space-between;
-    padding: 0  120px;
+    padding: 0 120px;
 }
-form{
+
+form {
     position: absolute;
     right: 0px;
     top: 20px;
     padding-right: 120px;
     gap: 10px;
 }
-#input-pokemon-name{
+
+#input-pokemon-name {
     height: 40px;
     border-radius: 8px;
     font-size: 18px;
@@ -22,42 +24,47 @@ form{
     color: black;
 }
 
-.IconPokeball{
+.icon-pokeball {
     height: 120px;
     width: 120px;
     border-radius: 50%;
 }
 
-@media(max-width: 650px ){
+@media(max-width: 650px) {
     form {
         padding-right: 60px;
     }
-    #header{
-        padding: 0  60px;
+
+    #header {
+        padding: 0 60px;
     }
-    #input-pokemon-name{
+
+    #input-pokemon-name {
         height: 40px;
         border-radius: 8px;
         font-size: 16px;
     }
 }
 
-@media(max-width: 500px ){
+@media(max-width: 500px) {
     form {
         padding-right: 10px;
     }
-    #header{
-       
+
+    #header {
+
         height: 80px;
         justify-content: space-between;
         padding: 0 20px;
     }
-    .IconPokeball{
+
+    .icon-pokeball {
         height: 80px;
         width: 80px;
         border-radius: 50%;
     }
-    #input-pokemon-name{
+
+    #input-pokemon-name {
         height: 32px;
         border-radius: 8px;
         font-size: 14px;
