@@ -1,10 +1,16 @@
 body {
+    
     background-color: rgb(0, 183, 255);
     display: flex;
     flex-direction: column;
-    max-width: 1920px;
+    margin: 0 auto;
 }
 
+#content{
+    max-width: 1920px;
+    display: flex;
+    align-self: center;
+}
 
 .card {
     width: 320px;
@@ -83,6 +89,7 @@ body {
     width: 100%;
     position: fixed;
     justify-content: center;
+    z-index: 3;
 }
 
 .card-big-view {
@@ -237,12 +244,6 @@ label {
     padding: 0 12px;
 }
 
-.change-Pokemon {
-    border-radius: 50px;
-    height: 94px;
-    margin-top: 4px;
-}
-
 @media(max-width: 750px) {
     .low-card {
         height: 336px;
@@ -251,12 +252,6 @@ label {
         width: 80%;
         font-size: 30px;
         margin: 10px;
-    }
-
-    .change-Pokemon {
-        border-radius: 50px;
-        height: 94px;
-        margin-top: 24px;
     }
 
     .ability-tab {
@@ -310,9 +305,6 @@ label {
     .card-imgs>div>img {
         max-height: 200px;
         max-width: 200px;
-        min-height: 120px;
-        min-width: 120px;
-        padding: 10px;
     }
 
     .stats-name {
@@ -361,14 +353,25 @@ label {
         width: 100%;
         justify-content: center;
         align-items: center;
+        height:200px ;
     }
 
     .low-card {
-        margin: 60px auto;
+        margin:20px auto 0 ;
+        position: relative;
+        bottom: -14px;
+        height: 320px;
     }
 
     .card-big-view {
-        height: 740px;
+        height: 660px;
+        top: 0;
+    }
+    .card-imgs>div>img {
+        max-height: 164px;
+        max-width: 164px;
+        padding: 10px;
+        margin-top: 0px;
     }
 }
 

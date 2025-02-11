@@ -1,13 +1,24 @@
 async function openLightbox(id, idNumb, pokeImgUrl, pokeGifUrl,) {
     dialog.dataset.currentPokemonId = idNumb;
     dialog.innerHTML = dialogTemplate(pokeImgUrl, pokeGifUrl, id, idNumb)
-    pokemonBgColorCheckAndDisplay(id)
-    displayStatsBotCard(id)
+    await pokemonBgColorCheckAndDisplay(id)
+    const pokemonData = await fetchedPokemonLoop(id);
+    if (!pokemonData) {
+        lightboxRestart(id, idNumb, pokeImgUrl, pokeGifUrl)
+    }
+    await displayStatsBotCard(id)
     displaySkills(id)
     pokeTypeOnBigViewCard(id)
     displayBottomCardInfosTabs(`stats-${id}`)
     checkChais(id)
     toggleLightbox()
+}
+
+function lightboxRestart(id, idNumb, pokeImgUrl, pokeGifUrl) {
+    setTimeout(() => {
+        openLightbox(id, idNumb, pokeImgUrl, pokeGifUrl);
+      }, 100);
+    return; 
 }
 
 function closingProtection(event) {
@@ -24,20 +35,23 @@ function fetchedPokemonLoop(id) {
     return null;
 }
 
-function displayStatsBotCard(id) {
+async function displayStatsBotCard(id) {
+    let responsToArrayResult = await fetchedPokemonOverview()
     let oneFetchPokemon = fetchedPokemonLoop(id)
-    let bottomCardRef = document.getElementById(`bottom-card-${oneFetchPokemon.id}`)
-    bottomCardRef.innerHTML = bottomCardTemplate(id);
-    let stats = oneFetchPokemon.stats
-    for (let indexStats = 0; indexStats < stats.length; indexStats++) {
-        let singleStat = stats[indexStats];
-        let statsDisplayRef = document.getElementById(`stats-${id}`)
-        statsDisplayRef.innerHTML += statTemplate(singleStat, id)
-    }
-}
+    let bottomCardRef = await waitForElement(`bottom-card-${oneFetchPokemon.id}`);
+    
+        bottomCardRef.innerHTML = bottomCardTemplate(id);
 
+        let stats = oneFetchPokemon.stats
+        for (let indexStats = 0; indexStats < stats.length; indexStats++) {
+            let singleStat = stats[indexStats];
+            let statsDisplayRef = await waitForElement(`stats-${id}`)
+                statsDisplayRef.innerHTML += statTemplate(singleStat, id)
+            }
+        }
+   
 async function displaySkills(id) {
-    let oneFetchPokemon = fetchedPokemonLoop(id)
+    let oneFetchPokemon = await fetchedPokemonLoop(id)
     let abilityOfFetchtPokemon = oneFetchPokemon.abilities;
     let abilityRef = document.getElementById(`abilities-${id}`)
     abilityRef.innerHTML = "";
@@ -119,11 +133,16 @@ window.addEventListener("resize", statBar);
 async function displayAbilityDescription(id, indexAbility) {
     document.getElementById('ability-description').innerHTML = '';
     let oneFetchPokemon = fetchedPokemon.find(pokemon => pokemon.species.name === id);
-    let abilitieArray = oneFetchPokemon.abilities;
+    let abilityUrl = oneFetchPokemon.abilities[indexAbility].ability.url;
+    if (abilityCache[abilityUrl]) {
+        document.getElementById('ability-description').innerHTML = abilityCache[abilityUrl];
+        return
+    }
     try {
-        let abilityDescriptionRespons = await fetch(abilitieArray[indexAbility].ability.url);
+        let abilityDescriptionRespons = await fetch(abilityUrl);
         let abilityDescriptionResponsToJson = await abilityDescriptionRespons.json();
         let abilityDescriptionToDisplay = abilityDescriptionResponsToJson.effect_entries.length > 0 ? abilityDescriptionResponsToJson.effect_entries[1].short_effect : "Keine Beschreibung verfügbar.";
+        abilityCache[abilityUrl] = abilityDescriptionToDisplay;
         document.getElementById('ability-description').innerHTML = abilityDescriptionToDisplay;
     } catch (error) {
         console.error("Fehler beim Abrufen der Fähigkeitsbeschreibung:", error);
@@ -143,14 +162,18 @@ async function checkChais(PokemonName) {
 
 async function fetchEvoChain(iEvoChain, failEvoChains, PokemonName) {
     try {
-        let responsEvoChainInfos = await fetch(BASE_URL + `evolution-chain/${iEvoChain}`)
+        if (evoCache[iEvoChain]) {
+            return await evoChainCheck(evoCache[iEvoChain], PokemonName,)
+        }else{
+            let responsEvoChainInfos = await fetch(BASE_URL + `evolution-chain/${iEvoChain}`)
         if (!responsEvoChainInfos.ok) {
             failEvoChains.push(iEvoChain)
             throw new Error(`Fehler bei Chain ${iEvoChain}`)
         }
         let responsEvoChainToJson = await responsEvoChainInfos.json()
+        evoCache[iEvoChain] = responsEvoChainToJson
         await evoChainCheck(responsEvoChainToJson, PokemonName,)
-    } catch (error) {
+    }} catch (error) {
         console.error(`Chain ${iEvoChain} konnte nicht gefunden werden`, error);
     }
 }
@@ -208,7 +231,7 @@ function thirdPokEvoColl(currentChain, responsEvoChainToJson, PokemonName, evoNu
     }
 }
 
-function collectEvoTemp(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames) {
+async function collectEvoTemp(currentChain, responsEvoChainToJson, PokemonName, evoNumbers, evoNames) {
     let collectEvoChainForTemlate = ""
     evoNumbers.forEach((evoNmb, index) => {
         let pokeImgUrl = evoUrls(evoNmb)
@@ -216,10 +239,9 @@ function collectEvoTemp(currentChain, responsEvoChainToJson, PokemonName, evoNum
         collectEvoChainForTemlate += evoChainForTemlate
     })
     let evoChainString = `evolution-${PokemonName}`
-    waitForElement(evoChainString, (evoChain) => {
+    let evoChain = await waitForElement(evoChainString)
         evoChain.innerHTML = collectEvoChainForTemlate
-    })
-}
+    }
 
 function evoUrls(evoNmb) {
     let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${evoNmb}.png`;
@@ -261,8 +283,21 @@ async function updateDialog(pokemonInfosToJson, newId) {
     displayPokeImg(pokemonInfosToJson)
     pokeTypeOnBigViewCard(pokemonInfosToJson.species.name);
     displayTypesforPokemon(pokemonInfosToJson)
-    displayStatsBotCard(`${pokemonInfosToJson.species.name}`);
+    await displayStatsBotCard(`${pokemonInfosToJson.species.name}`);
     displayBottomCardInfosTabs(`stats-${pokemonInfosToJson.species.name}`);
     displaySkills(pokemonInfosToJson.species.name)
     checkChais(pokemonInfosToJson.species.name)
 }
+
+
+// document.addEventListener("DOMContentLoaded", function(){
+
+//     let btns = Array.from(document.getElementsByClassName("btn"));
+//     btns.forEach(btn  => { 
+//         btn.addEventListener("onclick",function(){})
+//         btn.disabled = true ; 
+//     setTimeout(() => {
+//         btn.disabled = false; 
+//     }, 3000);
+// });
+// });

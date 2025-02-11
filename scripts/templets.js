@@ -163,8 +163,8 @@ function EvoChainTemplate(id, name, pokeImgUrl, pokeGifUrl, currentChainNmb, Evo
             `
 }
 
-function templateSearchin(name, id) {
-    return `<div class="search-result" onclick="loadToSearchedPokemon('${name}','${id}')"  id="foundet-${name}">
+function templateSearchin(name, id, pokeImgUrl, pokeGifUrl) {
+    return `<div class="search-result" onclick="loadToSearchedPokemon('${name}','${id}','${pokeImgUrl}','${pokeGifUrl}')"  id="foundet-${name}">
                 <div>#${id}</div>
                 <h3>${name[0].toUpperCase(0) + name.slice(1)}</h3>
             </div>

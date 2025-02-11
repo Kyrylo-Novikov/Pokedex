@@ -5,19 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokedex</title>
-    <link rel="stylesheet" href="/styles/header.css">
+    <link rel="stylesheet" href="styles/header.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="/styles/standarts.css">
-    <link rel="icon" type="image/png" href="/assets/img/pokeball_abklatsch.png">
-    <link rel="stylesheet" href="./styles/spinner.css">
-    <link rel="stylesheet" href="./assets/fonts/roboto.css">
+    <link rel="stylesheet" href="styles/standarts.css">
+    <link rel="icon" type="image/png" href="./assets/img/pokeball_abklatsch.png">
+    <link rel="stylesheet" href="styles/spinner.css">
+    <link rel="stylesheet" href="assets/fonts/roboto.css">
     <link rel="stylesheet" href="styles/att_selector.css">
     <link rel="stylesheet" href="styles/btn.css">
 </head>
 
 <body onload="Init()">
-    <header id="header" class="d-flex">
-        <img src="/assets/img/pokeball_abklatsch.png" alt="Pokeball IMG" class="icon-pokeball">
+    <header id="header" class="">
+        <img src="./assets/img/pokeball_abklatsch.png" alt="Pokeball IMG" class="icon-pokeball">
         <form action="" class="d-flex center flex-colume">
             <input type="text" placeholder="Search for a Pokemon" name="search" id="input-pokemon-name"
                 oninput="searchForPokemon()">
@@ -26,7 +26,7 @@
     </header>
     <div id="loading-spinner" class="d-none">
         <div id="loading-spinner-text">Daten werden geladen . . . </div>
-        <img id="loading-spinner-img" src="\assets\img\pokeball_abklatsch.png" alt="">
+        <img id="loading-spinner-img" src="./assets/img/pokeball_abklatsch.png" alt="">
     </div>
     <section id="content">
 
@@ -39,7 +39,7 @@
     </div>
     <footer id="footer">
     </footer>
-    <script src="/scripts/api.js"></script>
+    <script src="scripts/api.js"></script>
     <script src="script.js"></script>
     <script src="scripts/templets.js"></script>
 

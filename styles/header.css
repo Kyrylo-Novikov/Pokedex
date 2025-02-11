@@ -3,6 +3,9 @@
     height: 120px;
     justify-content: space-between;
     padding: 0 120px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 form {

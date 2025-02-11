@@ -4,7 +4,7 @@ const contentRef = document.getElementById("content")
 const BASE_TYPE_IMG_URL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/"
 const dialog = document.getElementById("lightbox")
 
-let currentLoadLimit = 10;
+let currentLoadLimit = 20;
 let offset = 0;
 let fetchedPokemon = []
 let path = "pokemon/"
@@ -16,6 +16,10 @@ let failEvoChains = []
 let bgColorList = []
 let currentChain = []
 let lastUsedIndex = 0
+let evoCache = []
+let typeImgCache = {}
+let abilityCache = {}
+let typCache = {}
 
 async function Init() {
     loadingSpinner(true)
@@ -48,7 +52,7 @@ async function fetchedPokemonOverview() {
 }
 
 async function searchForPokemon() {
-    let respons = await fetch(BASE_URL + "pokemon?limit=100000&offset=0")
+    let respons = await fetch(BASE_URL + "pokemon?limit=1025&offset=0")
     let responsToJson = await respons.json();
     let searchResponsToArrayResult = responsToJson.results
     let searchResultRef = document.getElementById("search-result")
@@ -57,15 +61,16 @@ async function searchForPokemon() {
     if (inputRef.value.length >= 3) {
         workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef)
     }
-    clearSearchingInput(inputRef, searchResultRef)
+    clearSearchingInput(inputRef, searchResultRef) 
 }
 
 function workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef) {
     let searchingName = searchResponsToArrayResult.filter((nameToSearch) => nameToSearch.name.toLowerCase().startsWith(inputRef.value.toLowerCase()));
-
     searchingName.slice(0, 10).forEach(searchResult => {
+        let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${searchResult.url.replace(/\D+/g, '').slice(1)}.gif`;
+        let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${searchResult.url.replace(/\D+/g, '').slice(1)}.png`;
         if (searchResult.url.replace(/\D+/g, '').slice(1) <= 1025) {
-            searchResultRef.innerHTML += templateSearchin(searchResult.name, searchResult.url.replace(/\D+/g, '').slice(1))
+            searchResultRef.innerHTML += templateSearchin(searchResult.name, searchResult.url.replace(/\D+/g, '').slice(1),pokeImgUrl,pokeGifUrl)
         }
     });
 }
@@ -79,7 +84,8 @@ function clearSearchingInput(inputRef, searchResultRef) {
     });
 }
 
-async function loadToSearchedPokemon(name, id) {
+async function loadToSearchedPokemon(name, id,pokeImgUrl, pokeGifUrl) {
+    openLightbox(name, id, pokeImgUrl, pokeGifUrl,)
     if (currentLoadLimit <= Number(id)) {
         currentLoadLimit = Number(id)
     }
@@ -101,11 +107,10 @@ async function loadData() {
 }
 
 async function pokemonOvInfos(responsToArrayResult) {
-    pokemonBgColorFetch()
+    await pokemonBgColorFetch()
     for (let iPokeName = lastUsedIndex; iPokeName < responsToArrayResult.length; iPokeName++) {
-        let pokeRef = responsToArrayResult[iPokeName];
-        let pokemonId = pokeRef.url.replace(/\D+/g, '').slice(1);
-        let pokemonInfosToJson = await fetchOnePokemon(pokemonId)
+        let pokeRef = responsToArrayResult[iPokeName].url.replace(/\D+/g, '').slice(1);
+        let pokemonInfosToJson = await fetchOnePokemon(pokeRef)
         if (!fetchedPokemon.some(pokemonInfo => pokemonInfo.name === pokemonInfosToJson.species.name)) {
             fetchedPokemon.push(pokemonInfosToJson)
         }
@@ -153,8 +158,7 @@ async function imgUrlTest(pokeImgUrl, pokeGifUrl, pokeImgUrlFallback) {
         let responsImg = await fetch(pokeImgUrl);
         let responsGif = await fetch(pokeGifUrl);
         if (!responsImg.ok) {
-            pokeImgUrl = pokeImgUrlFallback;
-            responsImg = await fetch(pokeImgUrl)
+            responsImg = await fetch(pokeImgUrlFallback)
         }
         if (!responsGif.ok) {
             pokeGifUrl = pokeImgUrlFallback
@@ -167,10 +171,15 @@ async function imgUrlTest(pokeImgUrl, pokeGifUrl, pokeImgUrlFallback) {
 }
 
 async function typeOnOv(typesOfTheDisplayedPokemon, pokemonInfosToJson) {
+    if (typCache[typesOfTheDisplayedPokemon]) {
+        await pokeTypName(typCache[typesOfTheDisplayedPokemon], typesOfTheDisplayedPokemon, pokemonInfosToJson);
+        return
+    }
     try {
         let responsTypes = await fetch(BASE_URL + "type/");
         let responsTypesToJson = await responsTypes.json();
         let responsTypesToArray = responsTypesToJson.results
+        typCache[typesOfTheDisplayedPokemon] = responsTypesToArray
         await pokeTypName(responsTypesToArray, typesOfTheDisplayedPokemon, pokemonInfosToJson);
     } catch (error) {
         console.error("Fehler beim Laden der Typen-Daten:", error)
@@ -182,25 +191,38 @@ async function pokeTypName(responsTypesToArray, typesOfTheDisplayedPokemon, poke
         let singelTypesName = singelTypes.name;
         let singelTypesID = singelTypes.url.replace(/\D+/g, '').slice(1)
         if (typesOfTheDisplayedPokemon === singelTypesName) {
-            await displayPokeTypImg(pokemonInfosToJson, singelTypesID)
+            await fetchPokeTypImg(pokemonInfosToJson, singelTypesID)
         }
     }
 }
 
-async function displayPokeTypImg(pokemonInfosToJson, singelTypesID) {
+async function fetchPokeTypImg(pokemonInfosToJson, singelTypesID) {
+
+    
     try {
+        if (typeImgCache[singelTypesID]) {
+            return displayPokeTypImg(pokemonInfosToJson,singelTypesID,typeImgCache[singelTypesID])
+        }
         let typImgsRef = await fetch(BASE_TYPE_IMG_URL + singelTypesID + `.png`);
         let typImgUrl = typImgsRef.url;
-        let typeOnCardRef = await new Promise(resolve => waitForElement(`${pokemonInfosToJson.species.name}-type-area`, resolve))
-        if (typeOnCardRef) {
-            let noDoubleTypeDisplay = typeOnCardRef.querySelectorAll(`.type-img[id*="-${singelTypesID}-type-img"]`)
-            if (noDoubleTypeDisplay.length === 0) {
-                typeOnCardRef.innerHTML += typeTemplate(pokemonInfosToJson, typImgUrl, singelTypesID)
-            }
-        };
+        
+        typeImgCache[singelTypesID] = typImgUrl
+       
+        displayPokeTypImg(pokemonInfosToJson,singelTypesID,typImgUrl)
+        
     } catch (error) {
         console.error("Fehler beim Laden des Typ:", error);
     }
+}
+
+async function displayPokeTypImg(pokemonInfosToJson,singelTypesID,typImgUrl) {
+    let typeOnCardRef = await waitForElement(`${pokemonInfosToJson.species.name}-type-area`)
+    if (typeOnCardRef) {
+        let noDoubleTypeDisplay = typeOnCardRef.querySelectorAll(`.type-img[id*="-${singelTypesID}-type-img"]`)
+        if (noDoubleTypeDisplay.length === 0) {
+            typeOnCardRef.innerHTML += typeTemplate(pokemonInfosToJson, typImgUrl, singelTypesID)
+        }
+}
 }
 
 async function pokemonBgColorFetch() {
@@ -212,13 +234,11 @@ async function pokemonBgColorFetch() {
         let bgColorUrlToJson = await bgColorUrl.json()
         bgColorList.push(bgColorUrlToJson)
     }
-    return bgColorList
 }
 
-function pokemonBgColorCheckAndDisplay() {
-    let bgColorListRef = bgColorList
-    for (let i = 0; i < bgColorListRef.length; i++) {
-        let bgColor = bgColorListRef[i];
+async function pokemonBgColorCheckAndDisplay() {
+    for (let i = 0; i < bgColorList.length; i++) {
+        let bgColor = bgColorList[i];
         let bgColorName = bgColor.name
         for (let iBgPokemonList = 0; iBgPokemonList < bgColor.pokemon_species.length; iBgPokemonList++) {
             let bgOneColorPokemonList = bgColor.pokemon_species[iBgPokemonList];
@@ -237,11 +257,10 @@ function pokemonBgColorDisplay(bgColorName, bgOneColorPokemonList) {
     })
 }
 
-function waitForColor(pokemonBgColorOverviewRef, pokemonBgColorBigviewRef, bgColorName) {
-    waitForElement(pokemonBgColorOverviewRef, (pokemonBgColorOverview) => {
+async function waitForColor(pokemonBgColorOverviewRef, pokemonBgColorBigviewRef, bgColorName) {
+     let pokemonBgColorOverview = await waitForElement(pokemonBgColorOverviewRef)
         pokemonBgColorOverview.style.backgroundColor = bgColorName
-    })
-    waitForElement(pokemonBgColorBigviewRef, (pokemonBgColorBigview) => {
+     let pokemonBgColorBigview = await waitForElement(pokemonBgColorBigviewRef)
         pokemonBgColorBigview.style.backgroundColor = bgColorName
         if (bgColorName === "black") {
             pokemonBgColorBigview.style.color = "white"
@@ -250,15 +269,17 @@ function waitForColor(pokemonBgColorOverviewRef, pokemonBgColorBigviewRef, bgCol
             let closeBtnRef = document.getElementById("close-btn")
             closeBtnRef.style.color = "black"
         }
-    })
-}
+    }
 
-function waitForElement(idString, callback) {
+async function waitForElement(idString) {
+    return new Promise((resolve) => {
     let interval = setInterval(() => {
         let nameOfRef = document.getElementById(idString);
         if (nameOfRef) {
             clearInterval(interval);
-            callback(nameOfRef);
+            resolve(nameOfRef);
         }
-    }, 20);
+    }, 0)
+})
 }
+

@@ -1,6 +1,7 @@
-.btn{
+.btn {
     cursor: pointer;
 }
+
 #load-more-btn {
     display: grid;
     justify-content: center;
@@ -22,4 +23,33 @@
 
 .change-pokemon-btn {
     gap: 80px;
+}
+
+
+.change-Pokemon {
+    border-radius: 50px;
+    height: 94px;
+    margin-top: 4px;
+}
+
+@media(max-width: 750px) {
+    .change-Pokemon {
+        border-radius: 50px;
+        height: 88px;
+        margin-top: 24px;
+    }
+}
+
+@media(max-width: 450px) {
+    .change-Pokemon {
+        position: relative;
+        bottom: 540px;
+        height: 48px;
+    }
+
+    .change-pokemon-btn {
+        gap: 0px;
+        justify-content: space-between;
+        margin:0 4px ;
+    }
 }
