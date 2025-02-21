@@ -1,24 +1,21 @@
 async function openLightbox(id, idNumb, pokeImgUrl, pokeGifUrl,) {
     dialog.dataset.currentPokemonId = idNumb;
     dialog.innerHTML = dialogTemplate(pokeImgUrl, pokeGifUrl, id, idNumb)
-    await pokemonBgColorCheckAndDisplay(id)
-    const pokemonData = await fetchedPokemonLoop(id);
-    if (!pokemonData) {
-        lightboxRestart(id, idNumb, pokeImgUrl, pokeGifUrl)
-    }
-    await displayStatsBotCard(id)
+    dNoneBtn(idNumb)
+    await displayStatsBotCard(id, idNumb)
     displaySkills(id)
     pokeTypeOnBigViewCard(id)
+    transferBgClassToDialog(id)
     displayBottomCardInfosTabs(`stats-${id}`)
     checkChais(id)
     toggleLightbox()
 }
 
-function lightboxRestart(id, idNumb, pokeImgUrl, pokeGifUrl) {
-    setTimeout(() => {
-        openLightbox(id, idNumb, pokeImgUrl, pokeGifUrl);
-      }, 100);
-    return; 
+function dNoneBtn(idNumb) {
+    let prevBtnRef = document.getElementById("prev-pokemon")
+    let nextBtnRef = document.getElementById("next-pokemon")
+    prevBtnRef.style.visibility = idNumb == 1 ? "hidden" : "visible";
+    nextBtnRef.style.visibility = idNumb == 1025 ? "hidden" : "visible";
 }
 
 function closingProtection(event) {
@@ -35,21 +32,24 @@ function fetchedPokemonLoop(id) {
     return null;
 }
 
-async function displayStatsBotCard(id) {
-    let responsToArrayResult = await fetchedPokemonOverview()
-    let oneFetchPokemon = fetchedPokemonLoop(id)
-    let bottomCardRef = await waitForElement(`bottom-card-${oneFetchPokemon.id}`);
-    
+async function displayStatsBotCard(id, idNumb) {
+    try {
+        let oneFetchPokemon = fetchedPokemonLoop(id)
+        let bottomCardRef = await waitForElement(`bottom-card-${idNumb}`);
         bottomCardRef.innerHTML = bottomCardTemplate(id);
-
         let stats = oneFetchPokemon.stats
+        let statsDisplayHtml = ""
+        let statsDisplayRef = await waitForElement(`stats-${id}`)
         for (let indexStats = 0; indexStats < stats.length; indexStats++) {
             let singleStat = stats[indexStats];
-            let statsDisplayRef = await waitForElement(`stats-${id}`)
-                statsDisplayRef.innerHTML += statTemplate(singleStat, id)
-            }
+            statsDisplayHtml += statTemplate(singleStat, id)
         }
-   
+        statsDisplayRef.innerHTML = statsDisplayHtml
+    } catch (error) {
+        console.error("Fehler bei der Anzeige der Statistiken:", error);
+    }
+}
+
 async function displaySkills(id) {
     let oneFetchPokemon = await fetchedPokemonLoop(id)
     let abilityOfFetchtPokemon = oneFetchPokemon.abilities;
@@ -130,10 +130,14 @@ function statBarSizing(htmlWidthNmb, barValue, bar) {
 
 window.addEventListener("resize", statBar);
 
-async function displayAbilityDescription(id, indexAbility) {
+function displayAbilityDescription(id, indexAbility) {
     document.getElementById('ability-description').innerHTML = '';
     let oneFetchPokemon = fetchedPokemon.find(pokemon => pokemon.species.name === id);
     let abilityUrl = oneFetchPokemon.abilities[indexAbility].ability.url;
+    dispAbilityDescription(abilityUrl)
+}
+
+async function dispAbilityDescription(abilityUrl) {
     if (abilityCache[abilityUrl]) {
         document.getElementById('ability-description').innerHTML = abilityCache[abilityUrl];
         return
@@ -153,28 +157,36 @@ async function displayAbilityDescription(id, indexAbility) {
 async function checkChais(PokemonName) {
     let totalChains = 541;
     for (let iEvoChain = 1; iEvoChain <= totalChains; iEvoChain++) {
-        if (failEvoChains.includes(iEvoChain)) {
+        if (excludetEvoChains.has(iEvoChain)) {
             continue
         }
-        await fetchEvoChain(iEvoChain, failEvoChains, PokemonName)
+        fetchEvoChain(iEvoChain, failEvoChains, PokemonName)
     }
 }
 
-async function fetchEvoChain(iEvoChain, failEvoChains, PokemonName) {
+function fetchEvoChain(iEvoChain, failEvoChains, PokemonName) {
     try {
-        if (evoCache[iEvoChain]) {
-            return await evoChainCheck(evoCache[iEvoChain], PokemonName,)
-        }else{
-            let responsEvoChainInfos = await fetch(BASE_URL + `evolution-chain/${iEvoChain}`)
+        if (evoCache[iEvoChain] === null || failEvoChains.has(iEvoChain)) {
+            return;
+        }
+        checkEvoCache(iEvoChain,failEvoChains,PokemonName) 
+    } catch (error) {
+        console.error(`Chain ${iEvoChain} konnte nicht gefunden werden`, error);
+    }
+}
+
+async function checkEvoCache(iEvoChain,failEvoChains,PokemonName) {
+    if (evoCache[iEvoChain]) {
+        return await evoChainCheck(evoCache[iEvoChain], PokemonName,)
+    } else {
+        let responsEvoChainInfos = await fetch(BASE_URL + `evolution-chain/${iEvoChain}`)
         if (!responsEvoChainInfos.ok) {
-            failEvoChains.push(iEvoChain)
+            failEvoChains.add(iEvoChain)
             throw new Error(`Fehler bei Chain ${iEvoChain}`)
         }
         let responsEvoChainToJson = await responsEvoChainInfos.json()
         evoCache[iEvoChain] = responsEvoChainToJson
         await evoChainCheck(responsEvoChainToJson, PokemonName,)
-    }} catch (error) {
-        console.error(`Chain ${iEvoChain} konnte nicht gefunden werden`, error);
     }
 }
 
@@ -240,8 +252,8 @@ async function collectEvoTemp(currentChain, responsEvoChainToJson, PokemonName, 
     })
     let evoChainString = `evolution-${PokemonName}`
     let evoChain = await waitForElement(evoChainString)
-        evoChain.innerHTML = collectEvoChainForTemlate
-    }
+    evoChain.innerHTML = collectEvoChainForTemlate
+}
 
 function evoUrls(evoNmb) {
     let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${evoNmb}.png`;
@@ -258,11 +270,12 @@ function changePokemon(direction) {
 async function changeInsideDialog(newId) {
     try {
         let pokemonInfosToJson = await fetchOnePokemon(newId);
-        if (pokemonInfosToJson) {
-            await updateDialog(pokemonInfosToJson, newId)
-        } else {
-            console.error("Pokemon mit dieser ID nicht gefunden.");
+        if (!fetchedPokemon.some(pokemonInfo => pokemonInfo.name === pokemonInfosToJson.species.name)) {
+            fetchedPokemon.push(pokemonInfosToJson)
+            fetchedPokemon.sort((a, b) => a.id - b.id)
         }
+        urlToChange(pokemonInfosToJson, newId)
+        await updateDialog(pokemonInfosToJson, newId)
     } catch (error) {
         console.error("Fehler beim Laden des nächsten/vorherigen Pokémon:", error);
     }
@@ -275,29 +288,17 @@ function urlToChange(pokemonInfosToJson, newId) {
         fetchedPokemon.push(pokemonInfosToJson)
     }
     dialog.innerHTML = dialogTemplate(pokeGifUrl, pokeGifUrl, pokemonInfosToJson.species.name, newId)
+    dNoneBtn(newId)
 }
 
 async function updateDialog(pokemonInfosToJson, newId) {
-    urlToChange(pokemonInfosToJson, newId)
-    await pokemonBgColorCheckAndDisplay(newId);
-    displayPokeImg(pokemonInfosToJson)
-    pokeTypeOnBigViewCard(pokemonInfosToJson.species.name);
-    displayTypesforPokemon(pokemonInfosToJson)
-    await displayStatsBotCard(`${pokemonInfosToJson.species.name}`);
-    displayBottomCardInfosTabs(`stats-${pokemonInfosToJson.species.name}`);
+    await pokemonOvInfos()
+    await pokeTypeOnBigViewCard(pokemonInfosToJson.species.name);
+    await displayTypesforPokemon(pokemonInfosToJson)
+    transferBgClassToDialog(pokemonInfosToJson.species.name)
+    await displayStatsBotCard(`${pokemonInfosToJson.species.name}`, newId);
+    await displayBottomCardInfosTabs(`stats-${pokemonInfosToJson.species.name}`);
     displaySkills(pokemonInfosToJson.species.name)
     checkChais(pokemonInfosToJson.species.name)
 }
 
-
-// document.addEventListener("DOMContentLoaded", function(){
-
-//     let btns = Array.from(document.getElementsByClassName("btn"));
-//     btns.forEach(btn  => { 
-//         btn.addEventListener("onclick",function(){})
-//         btn.disabled = true ; 
-//     setTimeout(() => {
-//         btn.disabled = false; 
-//     }, 3000);
-// });
-// });

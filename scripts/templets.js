@@ -24,7 +24,7 @@ function typeTemplate(pokemonInfosToJson, typImgUrl, singelTypesID) {
 
 function dialogTemplate(pokeImgUrl, pokeGifUrl, id, idNumb) {
     return ` 
-            <div id="lightbox-content${id}" onclick="closingProtection(event)"  class="card-big-view">
+            <div id="lightbox-content${id}" onclick="closingProtection(event)"  class="card-big-view bg-befor-fetch">
                 <div class="d-flex top-card">
                     <div>
                         #${idNumb}
@@ -51,8 +51,8 @@ function dialogTemplate(pokeImgUrl, pokeGifUrl, id, idNumb) {
                 <div class="d-flex low-card" id="bottom-card-${idNumb}">
                 </div>
                 <div class="d-flex center change-pokemon-btn">
-                    <img src="assets/img/pfeil_links.png" alt="" class="change-Pokemon center btn"   onclick="changePokemon(-1)">
-                    <img src="assets/img/pfeil_rechts.png" alt="" class="change-Pokemon center btn"   onclick="changePokemon(+1)">
+                    <img src="assets/img/pfeil_links.png" alt="" class="change-Pokemon center btn" id="prev-pokemon"  onclick="changePokemon(-1)">
+                    <img src="assets/img/pfeil_rechts.png" alt="" class="change-Pokemon center btn" id="next-pokemon"  onclick="changePokemon(+1)">
                 </div>
             </div>
             `
@@ -164,11 +164,12 @@ function EvoChainTemplate(id, name, pokeImgUrl, pokeGifUrl, currentChainNmb, Evo
 }
 
 function templateSearchin(name, id, pokeImgUrl, pokeGifUrl) {
-    return `<div class="search-result" onclick="loadToSearchedPokemon('${name}','${id}','${pokeImgUrl}','${pokeGifUrl}')"  id="foundet-${name}">
-                <div>#${id}</div>
-                <h3>${name[0].toUpperCase(0) + name.slice(1)}</h3>
-            </div>
-            `
+    return `
+        <div class="search-result" onclick="loadToSearchedPokemon('${name}', '${id}', '${pokeImgUrl}', '${pokeGifUrl}')" id="foundet-${name}">
+            <div>#${id}</div>
+            <h3>${name[0].toUpperCase() + name.slice(1)}</h3>
+        </div>
+    `;
 }
 
 

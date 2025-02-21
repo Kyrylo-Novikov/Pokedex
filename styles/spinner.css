@@ -27,7 +27,6 @@
 
 
 #loading-spinner{
-    /* display: flex; */
     position: absolute;
     width: 100%;
     top: 0;
@@ -36,11 +35,21 @@
     background-repeat: no-repeat;
     background-size: cover;
     overflow-x: hidden;
-    z-index: 3;
+    z-index: 20;
 }
 
 #loading-spinner-text{
     font-size: 38px;
+    font-weight: 900;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    animation: flash 1.5s linear  infinite forwards ;
+}
+
+#dialog-loading-spinner-text{
+    font-size: 18px;
     font-weight: 900;
     align-items: center;
     display: flex;

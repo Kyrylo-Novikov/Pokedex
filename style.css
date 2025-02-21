@@ -13,7 +13,7 @@ body {
 }
 
 .card {
-    width: 320px;
+    width: 280px;
     border: 18px outset gray;
     border-radius: 18px;
     text-align: center;
@@ -100,6 +100,7 @@ body {
     margin: 16px;
     border: 16px outset rgba(92, 92, 92, 0.665);
     font-weight: bold;
+    transition: background-color 0.3s ease
 }
 
 .attribute-style {
@@ -341,9 +342,9 @@ label {
     }
 
     .pokemonImgOnEvoDisplay {
-        margin-top: -28px;
-        width: 132px;
-        height: 132px
+        margin-top: -30px;
+        width: 124px;
+        height: 124px
     }
 }
 
@@ -393,7 +394,7 @@ label {
     }
 
     .pokemonImgOnEvoDisplay {
-        width: 120px;
-        height: 120px
+        width: 114px;
+        height: 114px
     }
 }

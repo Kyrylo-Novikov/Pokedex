@@ -7,24 +7,29 @@ const dialog = document.getElementById("lightbox")
 let currentLoadLimit = 20;
 let offset = 0;
 let fetchedPokemon = []
+// let allDisplayedPokemonHtml=""
 let path = "pokemon/"
 let pathImg = "home/"
 let pathGif = "showdown/"
 let pathFallbackImg = "official-artwork/"
 let bgPath = "pokemon-color/"
-let failEvoChains = []
+let failEvoChains = new Set()
 let bgColorList = []
 let currentChain = []
 let lastUsedIndex = 0
 let evoCache = []
+let excludetEvoChains= new Set ([210, 222, 225, 226, 227, 231, 238, 251]);
 let typeImgCache = {}
 let abilityCache = {}
 let typCache = {}
 
-async function Init() {
+async function init() {
     loadingSpinner(true)
-    await loadData()
-    loadingSpinner(false)
+    checkChais()
+    await pokemonOvInfos()
+    setTimeout(() => {
+        loadingSpinner(false)
+    }, 300);
 }
 
 function loadingSpinner(isLoading) {
@@ -61,7 +66,7 @@ async function searchForPokemon() {
     if (inputRef.value.length >= 3) {
         workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef)
     }
-    clearSearchingInput(inputRef, searchResultRef) 
+    clearSearchingInput(inputRef, searchResultRef)
 }
 
 function workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef) {
@@ -70,7 +75,7 @@ function workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inp
         let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${searchResult.url.replace(/\D+/g, '').slice(1)}.gif`;
         let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${searchResult.url.replace(/\D+/g, '').slice(1)}.png`;
         if (searchResult.url.replace(/\D+/g, '').slice(1) <= 1025) {
-            searchResultRef.innerHTML += templateSearchin(searchResult.name, searchResult.url.replace(/\D+/g, '').slice(1),pokeImgUrl,pokeGifUrl)
+            searchResultRef.innerHTML += templateSearchin(searchResult.name, searchResult.url.replace(/\D+/g, '').slice(1), pokeImgUrl, pokeGifUrl)
         }
     });
 }
@@ -84,41 +89,55 @@ function clearSearchingInput(inputRef, searchResultRef) {
     });
 }
 
-async function loadToSearchedPokemon(name, id,pokeImgUrl, pokeGifUrl) {
-    openLightbox(name, id, pokeImgUrl, pokeGifUrl,)
-    if (currentLoadLimit <= Number(id)) {
-        currentLoadLimit = Number(id)
-    }
+async function loadToSearchedPokemon(name, id, pokeImgUrl, pokeGifUrl) {
+    fetchedPokemon = [];
+    lastUsedIndex = 0;
+    contentRef.innerHTML = ""
+    let targetIndex = Number(id)-1
+    let buffer = 10
+    let newOffset = Math.max(0,targetIndex-buffer)
+    offset = newOffset
     loadingSpinner(true)
-    await loadData()
-    loadingSpinner(false)
+    await pokemonOvInfos()
+    openLightbox(name, id, pokeImgUrl, pokeGifUrl,)
+    setTimeout(() => {
+        loadingSpinner(false)
+    }, 300);
 }
 
 async function lodeMorePokemon() {
     currentLoadLimit += 20
     loadingSpinner(true)
-    await loadData()
-    loadingSpinner(false)
+    await pokemonOvInfos()
+    setTimeout(() => {
+        loadingSpinner(false)
+    }, 100);
 }
 
-async function loadData() {
+async function pokemonOvInfos() {
     let responsToArrayResult = await fetchedPokemonOverview()
-    await pokemonOvInfos(responsToArrayResult)
-}
-
-async function pokemonOvInfos(responsToArrayResult) {
-    await pokemonBgColorFetch()
     for (let iPokeName = lastUsedIndex; iPokeName < responsToArrayResult.length; iPokeName++) {
         let pokeRef = responsToArrayResult[iPokeName].url.replace(/\D+/g, '').slice(1);
         let pokemonInfosToJson = await fetchOnePokemon(pokeRef)
         if (!fetchedPokemon.some(pokemonInfo => pokemonInfo.name === pokemonInfosToJson.species.name)) {
-            fetchedPokemon.push(pokemonInfosToJson)
+            fetchedPokemon.push(pokemonInfosToJson);
+            fetchedPokemon.sort((a, b) => a.id - b.id);
         }
-        await displayPokeImg(pokemonInfosToJson)
-        await displayTypesforPokemon(pokemonInfosToJson)
-        await pokemonBgColorCheckAndDisplay()
         lastUsedIndex = iPokeName + 1
     }
+    renderAll()
+}
+
+
+async function renderAll() {
+    allPokemonHtml=[]
+    for (let pokemon of fetchedPokemon) {
+        let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${pokemon.id}.gif`;
+        let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${pokemon.id}.png`;
+        allPokemonHtml.push(template(pokeImgUrl, pokeGifUrl, pokemon))
+        displayTypesforPokemon(pokemon)
+    }
+    contentRef.innerHTML = allPokemonHtml.join("")
 }
 
 async function fetchOnePokemon(id) {
@@ -137,36 +156,9 @@ async function fetchOnePokemon(id) {
 }
 
 async function displayTypesforPokemon(pokemonInfosToJson) {
+    pokemonInfosToJson.backgroundColorSet = false
     for (let type of pokemonInfosToJson.types) {
         await typeOnOv(type.type.name, pokemonInfosToJson)
-    }
-}
-
-async function displayPokeImg(pokemonInfosToJson) {
-    let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${pokemonInfosToJson.id}.gif`;
-    let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${pokemonInfosToJson.id}.png`;
-    let pokeImgUrlFallback = `${BASE_IMG_URL}${pathFallbackImg}${pokemonInfosToJson.id}.png`;
-    if (document.getElementById(`${pokemonInfosToJson.species.name}`)) {
-        return
-    }
-    let { pokeImgUrl: finalImgUrl, pokeGifUrl: finalGifUrl } = await imgUrlTest(pokeImgUrl, pokeGifUrl, pokeImgUrlFallback);
-    contentRef.innerHTML += template(finalImgUrl, finalGifUrl, pokemonInfosToJson)
-}
-
-async function imgUrlTest(pokeImgUrl, pokeGifUrl, pokeImgUrlFallback) {
-    try {
-        let responsImg = await fetch(pokeImgUrl);
-        let responsGif = await fetch(pokeGifUrl);
-        if (!responsImg.ok) {
-            responsImg = await fetch(pokeImgUrlFallback)
-        }
-        if (!responsGif.ok) {
-            pokeGifUrl = pokeImgUrlFallback
-        }
-        return { pokeImgUrl, pokeGifUrl };
-    }
-    catch (error) {
-        return ({ pokeImgUrl: null, pokeGifUrl: null })
     }
 }
 
@@ -192,94 +184,63 @@ async function pokeTypName(responsTypesToArray, typesOfTheDisplayedPokemon, poke
         let singelTypesID = singelTypes.url.replace(/\D+/g, '').slice(1)
         if (typesOfTheDisplayedPokemon === singelTypesName) {
             await fetchPokeTypImg(pokemonInfosToJson, singelTypesID)
+            if (!pokemonInfosToJson.backgroundColorSet) {
+                setBgColor(pokemonInfosToJson, singelTypesID)
+                pokemonInfosToJson.backgroundColorSet = true
+            }
         }
     }
 }
 
-async function fetchPokeTypImg(pokemonInfosToJson, singelTypesID) {
+async function setBgColor(pokemonInfosToJson, singelTypesID) {
+    let bgColorRef = await waitForElement(`bg-${pokemonInfosToJson.species.name}-img`)
+    if (bgColorRef) {
+        bgColorRef.classList.add(`typ${singelTypesID}`)
+    }
+}
 
-    
+async function transferBgClassToDialog(pokemonName) {
+    let bgColorRef = await waitForElement(`bg-${pokemonName}-img`)
+    let dialogBgColorRef = document.getElementById(`lightbox-content${pokemonName}`)
+    let bgColorClassMatch = bgColorRef.className.match(/\btyp\d+\b/)
+    if(bgColorClassMatch){ 
+    dialogBgColorRef.classList.add(bgColorClassMatch)
+    }
+}
+
+async function fetchPokeTypImg(pokemonInfosToJson, singelTypesID) {
     try {
         if (typeImgCache[singelTypesID]) {
-            return displayPokeTypImg(pokemonInfosToJson,singelTypesID,typeImgCache[singelTypesID])
+            return displayPokeTypImg(pokemonInfosToJson, singelTypesID, typeImgCache[singelTypesID])
         }
         let typImgsRef = await fetch(BASE_TYPE_IMG_URL + singelTypesID + `.png`);
         let typImgUrl = typImgsRef.url;
-        
         typeImgCache[singelTypesID] = typImgUrl
-       
-        displayPokeTypImg(pokemonInfosToJson,singelTypesID,typImgUrl)
-        
+        displayPokeTypImg(pokemonInfosToJson, singelTypesID, typImgUrl)
     } catch (error) {
         console.error("Fehler beim Laden des Typ:", error);
     }
 }
 
-async function displayPokeTypImg(pokemonInfosToJson,singelTypesID,typImgUrl) {
+async function displayPokeTypImg(pokemonInfosToJson, singelTypesID, typImgUrl) {
     let typeOnCardRef = await waitForElement(`${pokemonInfosToJson.species.name}-type-area`)
     if (typeOnCardRef) {
         let noDoubleTypeDisplay = typeOnCardRef.querySelectorAll(`.type-img[id*="-${singelTypesID}-type-img"]`)
         if (noDoubleTypeDisplay.length === 0) {
             typeOnCardRef.innerHTML += typeTemplate(pokemonInfosToJson, typImgUrl, singelTypesID)
         }
-}
-}
-
-async function pokemonBgColorFetch() {
-    let responsBgColor = await fetch(BASE_URL + bgPath)
-    let responsToJsonBgColor = await responsBgColor.json();
-    let responsBgColorList = responsToJsonBgColor.results;
-    for (let bgColor of responsBgColorList) {
-        let bgColorUrl = await fetch(bgColor.url)
-        let bgColorUrlToJson = await bgColorUrl.json()
-        bgColorList.push(bgColorUrlToJson)
     }
 }
-
-async function pokemonBgColorCheckAndDisplay() {
-    for (let i = 0; i < bgColorList.length; i++) {
-        let bgColor = bgColorList[i];
-        let bgColorName = bgColor.name
-        for (let iBgPokemonList = 0; iBgPokemonList < bgColor.pokemon_species.length; iBgPokemonList++) {
-            let bgOneColorPokemonList = bgColor.pokemon_species[iBgPokemonList];
-            pokemonBgColorDisplay(bgColorName, bgOneColorPokemonList)
-        }
-    }
-};
-
-function pokemonBgColorDisplay(bgColorName, bgOneColorPokemonList) {
-    fetchedPokemon.forEach(pokemon => {
-        if (pokemon.species.name === bgOneColorPokemonList.name) {
-            let pokemonBgColorOverviewRef = `bg-${pokemon.species.name}-img`;
-            let pokemonBgColorBigviewRef = `lightbox-content${pokemon.species.name}`
-            waitForColor(pokemonBgColorOverviewRef, pokemonBgColorBigviewRef, bgColorName)
-        }
-    })
-}
-
-async function waitForColor(pokemonBgColorOverviewRef, pokemonBgColorBigviewRef, bgColorName) {
-     let pokemonBgColorOverview = await waitForElement(pokemonBgColorOverviewRef)
-        pokemonBgColorOverview.style.backgroundColor = bgColorName
-     let pokemonBgColorBigview = await waitForElement(pokemonBgColorBigviewRef)
-        pokemonBgColorBigview.style.backgroundColor = bgColorName
-        if (bgColorName === "black") {
-            pokemonBgColorBigview.style.color = "white"
-        }
-        if (bgColorName === "red" || bgColorName === "brown") {
-            let closeBtnRef = document.getElementById("close-btn")
-            closeBtnRef.style.color = "black"
-        }
-    }
 
 async function waitForElement(idString) {
     return new Promise((resolve) => {
-    let interval = setInterval(() => {
-        let nameOfRef = document.getElementById(idString);
-        if (nameOfRef) {
-            clearInterval(interval);
-            resolve(nameOfRef);
-        }
-    }, 0)
-})
+        let interval = setTimeout(() => {
+            let nameOfRef = document.getElementById(idString);
+            if (nameOfRef) {
+                clearInterval(interval);
+                resolve(nameOfRef);
+            }
+        }, 100)
+    })
 }
 

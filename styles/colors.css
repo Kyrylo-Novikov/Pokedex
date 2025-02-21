@@ -1,0 +1,134 @@
+.bg-befor-fetch {
+    background-color: white;
+}
+
+[id^="abilities-label-"] {
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+
+[id^="stats-"] {
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+[id^="bg-scale-hp"] {
+    background-color: green;
+}
+
+[id^="bg-scale-attack"] {
+    background-color: red;
+}
+
+[id^="bg-scale-defense"] {
+    background-color: blue;
+}
+
+[id^="bg-scale-special-attack"] {
+    background-color: orange;
+}
+
+[id^="bg-scale-special-defense"] {
+    background-color: indigo;
+}
+
+[id^="bg-scale-speed"] {
+    background-color: violet;
+}
+
+[id^="evolution"] {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.typ1 {
+    background-color: #9fa19f;
+}
+
+.typ2 {
+    background-color: #ff8000;
+}
+
+.typ3 {
+    background-color: #81b9ef;
+}
+
+.typ4 {
+    background-color: #9040cc;
+}
+
+.typ5 {
+    background-color: #915121;
+}
+
+.typ6 {
+    background-color: #AFA981
+}
+
+.typ7 {
+    background-color: #91A119
+}
+
+.typ8 {
+    background-color: #704170
+}
+
+.typ9 {
+    background-color: #60A1B8
+}
+
+.typ10 {
+    background-color: #E62829
+}
+
+.typ11 {
+    background-color: #2980EF
+}
+
+.typ12 {
+    background-color: #42a129;
+}
+
+.typ13 {
+    background-color: #FAC000
+}
+
+.typ14 {
+    background-color: #F14179
+}
+
+.typ15 {
+    background-color: #3FD8FF
+}
+
+.typ16 {
+    background-color: #5061E1
+}
+
+.typ17 {
+    background-color: #50413F
+}
+
+.typ18{
+    background-color: #F170F1
+}
+
+.typ19 {
+    background-color: #6d466d
+}
+
+@media(max-width: 510px) {
+    [id^="evolution"] {
+        display: flex;
+        flex-wrap: wrap;
+    }
+}
+
+@media(max-width: 450px) {
+    [id^="parameter"] {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 10px;
+    }
+}

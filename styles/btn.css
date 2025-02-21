@@ -18,18 +18,15 @@
 
 #close-btn {
     cursor: pointer;
-    color: red;
 }
 
 .change-pokemon-btn {
     gap: 80px;
 }
 
-
 .change-Pokemon {
     border-radius: 50px;
-    height: 94px;
-    margin-top: 4px;
+    height: 80px;
 }
 
 @media(max-width: 750px) {
