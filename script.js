@@ -1,3 +1,9 @@
+window.addEventListener("resize", statBar);
+
+function closingProtection(event) {
+    event.stopPropagation()
+}
+
 async function openLightbox(id, idNumb, pokeImgUrl, pokeGifUrl,) {
     dialog.dataset.currentPokemonId = idNumb;
     dialog.innerHTML = dialogTemplate(pokeImgUrl, pokeGifUrl, id, idNumb)
@@ -16,10 +22,6 @@ function dNoneBtn(idNumb) {
     let nextBtnRef = document.getElementById("next-pokemon")
     prevBtnRef.style.visibility = idNumb == 1 ? "hidden" : "visible";
     nextBtnRef.style.visibility = idNumb == 1025 ? "hidden" : "visible";
-}
-
-function closingProtection(event) {
-    event.stopPropagation()
 }
 
 function fetchedPokemonLoop(id) {
@@ -128,8 +130,6 @@ function statBarSizing(htmlWidthNmb, barValue, bar) {
     }
 }
 
-window.addEventListener("resize", statBar);
-
 function displayAbilityDescription(id, indexAbility) {
     document.getElementById('ability-description').innerHTML = '';
     let oneFetchPokemon = fetchedPokemon.find(pokemon => pokemon.species.name === id);
@@ -154,40 +154,13 @@ async function dispAbilityDescription(abilityUrl) {
     }
 }
 
+
 async function checkChais(PokemonName) {
-    let totalChains = 541;
-    for (let iEvoChain = 1; iEvoChain <= totalChains; iEvoChain++) {
-        if (excludetEvoChains.has(iEvoChain)) {
-            continue
-        }
-        fetchEvoChain(iEvoChain, failEvoChains, PokemonName)
-    }
-}
-
-function fetchEvoChain(iEvoChain, failEvoChains, PokemonName) {
-    try {
-        if (evoCache[iEvoChain] === null || failEvoChains.has(iEvoChain)) {
-            return;
-        }
-        checkEvoCache(iEvoChain,failEvoChains,PokemonName) 
-    } catch (error) {
-        console.error(`Chain ${iEvoChain} konnte nicht gefunden werden`, error);
-    }
-}
-
-async function checkEvoCache(iEvoChain,failEvoChains,PokemonName) {
-    if (evoCache[iEvoChain]) {
-        return await evoChainCheck(evoCache[iEvoChain], PokemonName,)
-    } else {
-        let responsEvoChainInfos = await fetch(BASE_URL + `evolution-chain/${iEvoChain}`)
-        if (!responsEvoChainInfos.ok) {
-            failEvoChains.add(iEvoChain)
-            throw new Error(`Fehler bei Chain ${iEvoChain}`)
-        }
-        let responsEvoChainToJson = await responsEvoChainInfos.json()
-        evoCache[iEvoChain] = responsEvoChainToJson
-        await evoChainCheck(responsEvoChainToJson, PokemonName,)
-    }
+    let responsPokeSpec = await fetch(BASE_URL + `pokemon-species/${PokemonName}`)
+    let responsPokeSpecUrlJson = await responsPokeSpec.json()
+    let fetchEvoChainRespons = await fetch(responsPokeSpecUrlJson.evolution_chain.url)
+    let fetchEvoChainResponsJson = await fetchEvoChainRespons.json()
+    evoChainCheck(fetchEvoChainResponsJson, PokemonName)
 }
 
 function evoChainCheck(responsEvoChainToJson, PokemonName) {

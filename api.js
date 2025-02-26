@@ -7,23 +7,24 @@ const dialog = document.getElementById("lightbox")
 let currentLoadLimit = 20;
 let offset = 0;
 let fetchedPokemon = []
+// let allDisplayedPokemonHtml=""
 let path = "pokemon/"
 let pathImg = "home/"
 let pathGif = "showdown/"
 let pathFallbackImg = "official-artwork/"
 let bgPath = "pokemon-color/"
+let failEvoChains = new Set()
 let bgColorList = []
 let currentChain = []
 let lastUsedIndex = 0
-let rendertPokeID = new Set()
-let typeImgCache = []
-let abilityCache = []
-let typCache = []
-let cacheSearchPokemon = []
-let cacheOverview = null
-let allTypesCache = null;
+let evoCache = []
+let excludetEvoChains= new Set ([210, 222, 225, 226, 227, 231, 238, 251]);
+let typeImgCache = {}
+let abilityCache = {}
+let typCache = {}
 
 async function init() {
+    checkChais()
     loadingSpinner(true)
     await pokemonOvInfos()
     setTimeout(() => {
@@ -44,37 +45,31 @@ function loadingSpinner(isLoading) {
 
 async function fetchedPokemonOverview() {
     try {
-        if (!cacheOverview || cacheOverview.length < currentLoadLimit ) {
         let respons = await fetch(BASE_URL + path + `?limit=${currentLoadLimit}&offset=${offset}.json`);
         let responsToJson = await respons.json();
         let responsToArrayOV = Object.entries(responsToJson)
         let responsToArrayResult = Object.values(responsToArrayOV[3][1])
-        cacheOverview = responsToArrayResult}
-        return cacheOverview
+        return responsToArrayResult
     } catch (error) {
         console.error("nichts gefetcht");
         return []
-    } 
+    }
 }
 
 async function searchForPokemon() {
+    let respons = await fetch(BASE_URL + "pokemon?limit=1025&offset=0")
+    let responsToJson = await respons.json();
+    let searchResponsToArrayResult = responsToJson.results
     let searchResultRef = document.getElementById("search-result")
     let inputRef = document.getElementById("input-pokemon-name")
-    if (cacheSearchPokemon.length === 0) {
-        let respons = await fetch(BASE_URL + "pokemon?limit=1025&offset=0")
-        let responsToJson = await respons.json();
-        cacheSearchPokemon = responsToJson.results
-    }
     searchResultRef.innerHTML = ''
     if (inputRef.value.length >= 3) {
-
-        workWithFoundetPokemon(cacheSearchPokemon, searchResultRef, inputRef)
+        workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef)
     }
     clearSearchingInput(inputRef, searchResultRef)
 }
 
 function workWithFoundetPokemon(searchResponsToArrayResult, searchResultRef, inputRef) {
-    rendertPokeID.clear();
     let searchingName = searchResponsToArrayResult.filter((nameToSearch) => nameToSearch.name.toLowerCase().startsWith(inputRef.value.toLowerCase()));
     searchingName.slice(0, 10).forEach(searchResult => {
         let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${searchResult.url.replace(/\D+/g, '').slice(1)}.gif`;
@@ -96,16 +91,15 @@ function clearSearchingInput(inputRef, searchResultRef) {
 
 async function loadToSearchedPokemon(name, id, pokeImgUrl, pokeGifUrl) {
     fetchedPokemon = [];
-    cacheOverview = null
     lastUsedIndex = 0;
     contentRef.innerHTML = ""
-    let targetIndex = Number(id) - 1
+    let targetIndex = Number(id)-1
     let buffer = 10
-    let newOffset = Math.max(0, targetIndex - buffer)
+    let newOffset = Math.max(0,targetIndex-buffer)
     offset = newOffset
     loadingSpinner(true)
     await pokemonOvInfos()
-    await openLightbox(name, id, pokeImgUrl, pokeGifUrl,)
+    openLightbox(name, id, pokeImgUrl, pokeGifUrl,)
     setTimeout(() => {
         loadingSpinner(false)
     }, 300);
@@ -134,24 +128,16 @@ async function pokemonOvInfos() {
     renderAll()
 }
 
+
 async function renderAll() {
-    allPokemonHtml = []
+    allPokemonHtml=[]
     for (let pokemon of fetchedPokemon) {
-        if (!rendertPokeID.has(pokemon.id)) {
-            let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${pokemon.id}.gif`;
-            let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${pokemon.id}.png`;
-            let pokemonHtml = (template(pokeImgUrl, pokeGifUrl, pokemon))
-            displayTypesforPokemon(pokemon)
-            let positionCheck = Math.min(...rendertPokeID)
-            rendertPokeID.add(pokemon.id)
-            if (pokemon.id < positionCheck) {
-                contentRef.insertAdjacentHTML("afterbegin", pokemonHtml);
-            } else {
-                allPokemonHtml.push(pokemonHtml);
-            }
-        }
+        let pokeGifUrl = `${BASE_IMG_URL}${pathGif}${pokemon.id}.gif`;
+        let pokeImgUrl = `${BASE_IMG_URL}${pathImg}${pokemon.id}.png`;
+        allPokemonHtml.push(template(pokeImgUrl, pokeGifUrl, pokemon))
+        displayTypesforPokemon(pokemon)
     }
-    contentRef.insertAdjacentHTML('beforeend', allPokemonHtml.join(""));
+    contentRef.innerHTML = allPokemonHtml.join("")
 }
 
 async function fetchOnePokemon(id) {
@@ -176,18 +162,20 @@ async function displayTypesforPokemon(pokemonInfosToJson) {
     }
 }
 
-async function fetchAllTypes() {
-    if (!allTypesCache) {
+async function typeOnOv(typesOfTheDisplayedPokemon, pokemonInfosToJson) {
+    if (typCache[typesOfTheDisplayedPokemon]) {
+        await pokeTypName(typCache[typesOfTheDisplayedPokemon], typesOfTheDisplayedPokemon, pokemonInfosToJson);
+        return
+    }
+    try {
         let responsTypes = await fetch(BASE_URL + "type/");
         let responsTypesToJson = await responsTypes.json();
-        allTypesCache = responsTypesToJson.results
+        let responsTypesToArray = responsTypesToJson.results
+        typCache[typesOfTheDisplayedPokemon] = responsTypesToArray
+        await pokeTypName(responsTypesToArray, typesOfTheDisplayedPokemon, pokemonInfosToJson);
+    } catch (error) {
+        console.error("Fehler beim Laden der Typen-Daten:", error)
     }
-    return allTypesCache
-}
-
-async function typeOnOv(typesOfTheDisplayedPokemon, pokemonInfosToJson) {
-    let allTypes = await fetchAllTypes()
-    await pokeTypName(allTypes, typesOfTheDisplayedPokemon, pokemonInfosToJson);
 }
 
 async function pokeTypName(responsTypesToArray, typesOfTheDisplayedPokemon, pokemonInfosToJson) {
@@ -204,20 +192,6 @@ async function pokeTypName(responsTypesToArray, typesOfTheDisplayedPokemon, poke
     }
 }
 
-async function fetchPokeTypImg(pokemonInfosToJson, singelTypesID) {
-    try {
-        if (typeImgCache[singelTypesID]) {
-            return displayPokeTypImg(pokemonInfosToJson, singelTypesID, typeImgCache[singelTypesID])
-        }
-        let typImgsRef = await fetch(BASE_TYPE_IMG_URL + singelTypesID + `.png`);
-        let typImgUrl = typImgsRef.url;
-        typeImgCache[singelTypesID] = typImgUrl
-        displayPokeTypImg(pokemonInfosToJson, singelTypesID, typeImgCache[singelTypesID])
-    } catch (error) {
-        console.error("Fehler beim Laden des Typ:", error);
-    }
-}
-
 async function setBgColor(pokemonInfosToJson, singelTypesID) {
     let bgColorRef = await waitForElement(`bg-${pokemonInfosToJson.species.name}-img`)
     if (bgColorRef) {
@@ -229,8 +203,22 @@ async function transferBgClassToDialog(pokemonName) {
     let bgColorRef = await waitForElement(`bg-${pokemonName}-img`)
     let dialogBgColorRef = document.getElementById(`lightbox-content${pokemonName}`)
     let bgColorClassMatch = bgColorRef.className.match(/\btyp\d+\b/)
-    if (bgColorClassMatch) {
-        dialogBgColorRef.classList.add(bgColorClassMatch)
+    if(bgColorClassMatch){ 
+    dialogBgColorRef.classList.add(bgColorClassMatch)
+    }
+}
+
+async function fetchPokeTypImg(pokemonInfosToJson, singelTypesID) {
+    try {
+        if (typeImgCache[singelTypesID]) {
+            return displayPokeTypImg(pokemonInfosToJson, singelTypesID, typeImgCache[singelTypesID])
+        }
+        let typImgsRef = await fetch(BASE_TYPE_IMG_URL + singelTypesID + `.png`);
+        let typImgUrl = typImgsRef.url;
+        typeImgCache[singelTypesID] = typImgUrl
+        displayPokeTypImg(pokemonInfosToJson, singelTypesID, typImgUrl)
+    } catch (error) {
+        console.error("Fehler beim Laden des Typ:", error);
     }
 }
 
@@ -252,7 +240,7 @@ async function waitForElement(idString) {
                 clearInterval(interval);
                 resolve(nameOfRef);
             }
-        }, 150)
+        }, 100)
     })
 }
 
