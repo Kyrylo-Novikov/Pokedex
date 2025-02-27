@@ -154,7 +154,6 @@ async function dispAbilityDescription(abilityUrl) {
     }
 }
 
-
 async function checkChais(PokemonName) {
     let responsPokeSpec = await fetch(BASE_URL + `pokemon-species/${PokemonName}`)
     let responsPokeSpecUrlJson = await responsPokeSpec.json()
@@ -261,7 +260,20 @@ function urlToChange(pokemonInfosToJson, newId) {
         fetchedPokemon.push(pokemonInfosToJson)
     }
     dialog.innerHTML = dialogTemplate(pokeGifUrl, pokeGifUrl, pokemonInfosToJson.species.name, newId)
-    dNoneBtn(newId)
+    btnDisable()
+    dNoneBtn(newId);
+}
+
+function btnDisable() {
+    let buttons = dialog.querySelectorAll(".btn");
+    buttons.forEach(btn => {
+        btn.style.pointerEvents = "none";
+    });
+    setTimeout(() => {
+        buttons.forEach(btn => {
+            btn.style.pointerEvents = "auto";
+        });
+    }, 400);
 }
 
 async function updateDialog(pokemonInfosToJson, newId) {

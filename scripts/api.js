@@ -31,6 +31,20 @@ async function init() {
     }, 300);
 }
 
+async function backToStartDisplay() {
+    contentRef.innerHTML = ""
+    rendertPokeID.clear();
+    fetchedPokemon = [];
+    cacheOverview = null
+    lastUsedIndex = 0;
+    currentLoadLimit = 20;
+    offset = 0;
+    console.log(currentLoadLimit);
+    console.log(offset);
+    await init()
+    console.log();
+}
+
 function loadingSpinner(isLoading) {
     let spinnerRef = document.getElementById("loading-spinner")
     if (isLoading) {
@@ -44,17 +58,18 @@ function loadingSpinner(isLoading) {
 
 async function fetchedPokemonOverview() {
     try {
-        if (!cacheOverview || cacheOverview.length < currentLoadLimit ) {
-        let respons = await fetch(BASE_URL + path + `?limit=${currentLoadLimit}&offset=${offset}.json`);
-        let responsToJson = await respons.json();
-        let responsToArrayOV = Object.entries(responsToJson)
-        let responsToArrayResult = Object.values(responsToArrayOV[3][1])
-        cacheOverview = responsToArrayResult}
+        if (!cacheOverview || cacheOverview.length < currentLoadLimit) {
+            let respons = await fetch(BASE_URL + path + `?limit=${currentLoadLimit}&offset=${offset}.json`);
+            let responsToJson = await respons.json();
+            let responsToArrayOV = Object.entries(responsToJson)
+            let responsToArrayResult = Object.values(responsToArrayOV[3][1])
+            cacheOverview = responsToArrayResult
+        }
         return cacheOverview
     } catch (error) {
         console.error("nichts gefetcht");
         return []
-    } 
+    }
 }
 
 async function searchForPokemon() {
@@ -67,7 +82,6 @@ async function searchForPokemon() {
     }
     searchResultRef.innerHTML = ''
     if (inputRef.value.length >= 3) {
-
         workWithFoundetPokemon(cacheSearchPokemon, searchResultRef, inputRef)
     }
     clearSearchingInput(inputRef, searchResultRef)
@@ -255,4 +269,3 @@ async function waitForElement(idString) {
         }, 150)
     })
 }
-
