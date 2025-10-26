@@ -12,15 +12,22 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 50%;
+  justify-content: space-between;
+}
+
+.back-to-start > h1 {
+  font-size: 64px;
+  font-weight: 900;
+  color: yellow;
+  transform: translateX(50%);
 }
 
 .back-to-start > p {
   width: 120px;
   position: absolute;
   z-index: 1;
-  /* margin-left: auto; */
   left: 0;
-  padding: auto;
   padding: 0 12px;
   font-weight: 900;
   top: 60%;
@@ -44,6 +51,8 @@ form {
   padding: 0px 8px;
   font-weight: 700;
   color: black;
+  position: relative;
+  top: 58px;
 }
 
 .icon-pokeball {
@@ -51,6 +60,27 @@ form {
   width: 120px;
   border-radius: 50%;
   cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .back-to-start > h1 {
+    font-size: 48px;
+    transform: translateX(50%);
+  }
+}
+
+@media (max-width: 970px) {
+  .back-to-start > h1 {
+    font-size: 42px;
+    transform: translateX(10%);
+  }
+}
+
+@media (max-width: 830px) {
+  .back-to-start > h1 {
+    font-size: 34px;
+    transform: translateX(0);
+  }
 }
 
 @media (max-width: 650px) {
@@ -69,7 +99,7 @@ form {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 520px) {
   form {
     padding-right: 10px;
   }
@@ -88,7 +118,17 @@ form {
 
   #input-pokemon-name {
     height: 32px;
-    border-radius: 8px;
     font-size: 14px;
+    top: 26px;
+  }
+  .back-to-start > p {
+    font-size: 12px;
+    padding: 0 24px;
+  }
+  .back-to-start > p > span {
+    display: none;
+  }
+  .back-to-start > h1 {
+    transform: translateY(-40%);
   }
 }
