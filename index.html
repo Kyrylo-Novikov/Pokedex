@@ -1,48 +1,70 @@
 <!DOCTYPE html>
 <html lang="de">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pokedex</title>
-    <link rel="stylesheet" href="styles/header.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="styles/standarts.css">
-    <link rel="icon" type="image/png" href="./assets/img/pokeball_abklatsch.png">
-    <link rel="stylesheet" href="styles/spinner.css">
-    <link rel="stylesheet" href="assets/fonts/roboto.css">
-    <link rel="stylesheet" href="styles/colors.css">
-    <link rel="stylesheet" href="styles/btn.css">
-</head>
+    <link rel="stylesheet" href="styles/header.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="styles/standarts.css" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="./assets/img/pokeball_abklatsch.png"
+    />
+    <link rel="stylesheet" href="styles/spinner.css" />
+    <link rel="stylesheet" href="assets/fonts/roboto.css" />
+    <link rel="stylesheet" href="styles/colors.css" />
+    <link rel="stylesheet" href="styles/btn.css" />
+  </head>
 
-<body onload="init()">
+  <body onload="init()">
     <header id="header" class="">
-        <img src="./assets/img/pokeball_abklatsch.png" alt="Pokeball IMG" class="icon-pokeball" onclick="backToStartDisplay()">
-        <form action="" class="d-flex center flex-colume">
-            <input type="text" placeholder="Search for a Pokemon" name="search" id="input-pokemon-name" class="btn" oninput="searchForPokemon()">
-            <div id="search-result" class="center flex-colume d-flex"></div>
-        </form>
+      <div class="back-to-start">
+        <p>Back to Start</p>
+        <img
+          src="./assets/img/pokeball_abklatsch.png"
+          alt="Pokeball IMG"
+          class="icon-pokeball"
+          onclick="backToStartDisplay()"
+        />
+      </div>
+
+      <form action="" class="d-flex center flex-colume">
+        <input
+          type="text"
+          placeholder="Search for a Pokemon"
+          name="search"
+          id="input-pokemon-name"
+          class="btn"
+          oninput="searchForPokemon()"
+        />
+        <div id="search-result" class="center flex-colume d-flex"></div>
+      </form>
     </header>
     <div id="loading-spinner" class="d-none">
-        <div id="loading-spinner-text">Loading data . . . </div>
-        <img id="loading-spinner-img" src="./assets/img/pokeball_abklatsch.png" alt="">
+      <div id="loading-spinner-text">Loading data . . .</div>
+      <img
+        id="loading-spinner-img"
+        src="./assets/img/pokeball_abklatsch.png"
+        alt=""
+      />
     </div>
-    <section id="content">
-
-    </section>
-    <div id="lightbox" onclick="toggleLightbox()" class="lightbox d-none">
-
-    </div>
+    <section id="content"></section>
+    <div id="lightbox" onclick="toggleLightbox()" class="lightbox d-none"></div>
     <div id="load-more-btn">
-        <button id="" class="center btn" type="button" onclick="lodeMorePokemon()">Load more</button>
+      <button
+        id=""
+        class="center btn"
+        type="button"
+        onclick="lodeMorePokemon()"
+      >
+        Load more
+      </button>
     </div>
-    <footer id="footer">
-    </footer>
+    <footer id="footer"></footer>
     <script src="scripts/api.js"></script>
     <script src="script.js"></script>
     <script src="scripts/templets.js"></script>
-
-
-</body>
-
+  </body>
 </html>
