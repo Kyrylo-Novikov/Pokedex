@@ -231,6 +231,7 @@ label {
   z-index: 10;
   position: relative;
   top: 50px;
+  width: 200px;
 }
 
 .search-result {
